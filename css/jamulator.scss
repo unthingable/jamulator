@@ -55,6 +55,7 @@ body {
   column-gap: 14px;
   row-gap: var(--section-gap);
   position: relative;
+  width: 100%;
   max-width: 690px;
 }
 
@@ -320,6 +321,12 @@ body {
   animation: press-pulse 1.5s ease-in-out infinite;
 }
 
+/* Toggle-locked buttons (Option+click) */
+.jam-btn.locked {
+  outline: 2px solid var(--accent, #4adeaa);
+  outline-offset: -2px;
+}
+
 /* Colored LED buttons: tinted off-state backlight */
 [data-control-id="BtnPlay"] { --btn-tint: 74 222 128; background: linear-gradient(to bottom, #6a917a, #4e7a5e); }
 [data-control-id="BtnRecord"] { --btn-tint: 248 113 113; background: linear-gradient(to bottom, #917070, #7a5454); }
@@ -474,7 +481,7 @@ body {
   &.hover {
     outline-color: color-mix(in srgb, var(--accent) 40%, transparent);
   }
-  &.hover.shift-hover {
+  &.hover.push-hover {
     outline-color: color-mix(in srgb, #e08030 50%, transparent);
   }
   &.touched.hover {
@@ -916,7 +923,7 @@ body {
     }
   }
 
-  button {
+  button:not(.icon-btn) {
     @extend .mapping-btn;
   }
 }
@@ -938,28 +945,32 @@ body {
   }
 }
 
-#btn-connect {
-  min-width: 92px;
-  justify-content: center;
-
-  &.connected {
-    color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 40%, #333);
-  }
-}
-
-.connect-group {
-  display: flex;
-  flex-direction: column;
+.icon-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+  svg { display: block; width: 16px; height: 16px; }
+  &:hover { color: #ccc; border-color: #4a4a4a; }
 }
 
-kbd.hint {
-  color: #555;
-  font-size: 9px;
-  font-family: inherit;
+#toolbar #btn-connect.connected {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, #333);
+}
+
+.keyboard-picker {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .mapping-btn {
@@ -995,7 +1006,7 @@ kbd.hint {
 
 #file-ncmj { display: none; }
 
-#btn-zoom-mode {
+#toolbar #btn-zoom-mode {
   font-size: 10px;
   line-height: 1;
   padding: 0 8px;
@@ -1012,7 +1023,8 @@ body.zoom-fit {
   padding: 0;
   overflow: hidden;
 
-  h1 { display: none; }
+  h1, #status { display: none; }
+
 
   #toolbar {
     padding: 0 8px 6px;
@@ -1029,7 +1041,7 @@ body.zoom-fit {
 .mapping-popover {
   position: absolute;
   bottom: calc(100% + 6px);
-  right: 0;
+  left: 0;
   background: #242424;
   border: 1px solid #444;
   border-radius: 6px;

@@ -1,7 +1,8 @@
-// Encoder: scroll-wheel, click-drag turn, touch/press split (shift = press)
+// Encoder: scroll-wheel, click-drag turn, touch/press split (push key = press)
 
 import { sendCC } from './midi-engine.js';
 import { state } from './state.js';
+import { isPushKeyHeld } from './keyboard.js';
 
 const ENCODER_CC_TURN = 86;
 const ENCODER_CC_PUSH = 87;
@@ -17,19 +18,18 @@ let lastClientY = 0;
 let pixelAccum = 0;
 let wheelAccum = 0;
 let isPush = false;
-let shiftHeld = false;
 
 export function initEncoder() {
   const el = document.querySelector('[data-control-id="EncPush"]');
   if (!el) return;
 
-  // ── Pointer: touch (click) or press (shift+click) + drag-to-turn ──
+  // ── Pointer: touch (click) or press (pushKey+click) + drag-to-turn ──
 
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
 
-    isPush = e.shiftKey;
+    isPush = isPushKeyHeld();
     dragging = true;
     dragStarted = false;
     lastClientY = e.clientY;
@@ -39,7 +39,7 @@ export function initEncoder() {
     sendCC(0, ENCODER_CC_TOUCH, 127);
     state.setEncoderTouched(true);
 
-    // Press only with shift
+    // Press only with push key
     if (isPush) {
       sendCC(0, ENCODER_CC_PUSH, 127);
       state.setEncoderPushed(true);
@@ -116,34 +116,27 @@ export function initEncoder() {
     }
   }, { passive: false });
 
-  // ── Hover indicator + shift tracking ──
+  // ── Hover indicator + push-key tracking ──
 
   el.addEventListener('pointerenter', () => {
     el.classList.add('hover');
-    if (shiftHeld) el.classList.add('shift-hover');
+    if (isPushKeyHeld()) el.classList.add('push-hover');
   });
 
   el.addEventListener('pointerleave', () => {
-    el.classList.remove('hover', 'shift-hover');
+    el.classList.remove('hover', 'push-hover');
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') {
-      shiftHeld = true;
-      if (el.matches(':hover')) el.classList.add('shift-hover');
-    }
+  document.addEventListener('keydown', () => {
+    if (isPushKeyHeld() && el.matches(':hover')) el.classList.add('push-hover');
   });
 
-  document.addEventListener('keyup', (e) => {
-    if (e.key === 'Shift') {
-      shiftHeld = false;
-      el.classList.remove('shift-hover');
-    }
+  document.addEventListener('keyup', () => {
+    if (!isPushKeyHeld()) el.classList.remove('push-hover');
   });
 
   window.addEventListener('blur', () => {
-    shiftHeld = false;
-    el.classList.remove('shift-hover');
+    el.classList.remove('push-hover');
   });
 
   el.addEventListener('contextmenu', (e) => e.preventDefault());

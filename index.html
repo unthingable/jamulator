@@ -178,9 +178,10 @@
         <option value="">-- None --</option>
       </select>
     </div>
-    <div class="connect-group">
-      <kbd class="hint">space</kbd>
-      <button id="btn-connect">Connect</button>
+    <button id="btn-connect" class="icon-btn" title="Connect MIDI ports"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M20.18,12C20.18,8.18 17.55,4.96 14,4.07V6H10V4.07C6.45,4.96 3.82,8.18 3.82,12A8.18,8.18 0 0,0 12,20.18A8.18,8.18 0 0,0 20.18,12M7,10.64A1.36,1.36 0 0,1 8.36,12A1.36,1.36 0 0,1 7,13.36C6.25,13.36 5.64,12.75 5.64,12C5.64,11.25 6.25,10.64 7,10.64M17,10.64A1.36,1.36 0 0,1 18.36,12A1.36,1.36 0 0,1 17,13.36A1.36,1.36 0 0,1 15.64,12A1.36,1.36 0 0,1 17,10.64M8.36,14.27A1.37,1.37 0 0,1 9.73,15.64C9.73,16.39 9.12,17 8.36,17A1.36,1.36 0 0,1 7,15.64C7,14.88 7.61,14.27 8.36,14.27M15.64,14.27C16.39,14.27 17,14.88 17,15.64A1.36,1.36 0 0,1 15.64,17C14.88,17 14.27,16.39 14.27,15.64A1.37,1.37 0 0,1 15.64,14.27M12,15.64A1.36,1.36 0 0,1 13.36,17A1.36,1.36 0 0,1 12,18.36A1.36,1.36 0 0,1 10.64,17A1.36,1.36 0 0,1 12,15.64Z"/></svg></button>
+    <div class="keyboard-picker">
+      <button id="btn-keyboard" class="icon-btn" title="Keyboard shortcuts"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19,10H17V8H19M19,13H17V11H19M16,10H14V8H16M16,13H14V11H16M16,17H8V15H16M7,10H5V8H7M7,13H5V11H7M8,11H10V13H8M8,8H10V10H8M11,11H13V13H11M11,8H13V10H11M20,5H4C2.89,5 2,5.89 2,7V17A2,2 0 0,0 4,19H20A2,2 0 0,0 22,17V7C22,5.89 21.1,5 20,5Z"/></svg></button>
+      <div id="keyboard-popover" class="mapping-popover" hidden></div>
     </div>
     <div class="mapping-picker">
       <button id="btn-mapping" class="mapping-btn">.ncmj</button>
@@ -190,11 +191,12 @@
         <button id="btn-open-file" class="mapping-action">Open file…</button>
       </div>
     </div>
-    <button id="btn-zoom-mode" class="zoom-toggle active" title="Window zoom: resize window to scale">FIT</button>
+    <button id="btn-zoom-mode" class="active" title="Window zoom: resize window to scale">FIT</button>
     <input type="file" id="file-ncmj" accept=".ncmj,.xml">
   </div>
   </div><!-- .conf-group -->
 
+  <div id="status"></div>
 
   <script type="module" src="js/main.js"></script>
 </body>

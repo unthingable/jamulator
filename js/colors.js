@@ -26,6 +26,9 @@ const BASE_COLORS = [
 // Build lookup table: value → { hex, opacity }
 const COLOR_TABLE = new Map();
 
+// Brightness curve: raised floor, wider spread for visible dim levels
+const BRIGHTNESS = [0.50, 0.72, 0.86, 1.0];
+
 for (const { base, hex } of BASE_COLORS) {
   if (hex === null) {
     // OFF: all 4 brightness values map to off
@@ -34,9 +37,6 @@ for (const { base, hex } of BASE_COLORS) {
     }
   } else {
     for (let b = 0; b < 4; b++) {
-      // Brightness curve: raised floor, wider spread for visible dim levels
-      const BRIGHTNESS = [0.50, 0.72, 0.86, 1.0];
-    //   const BRIGHTNESS = [0.45, 0.63, 0.82, 1.0];
       COLOR_TABLE.set(base + b, { hex, opacity: BRIGHTNESS[b] });
     }
   }
@@ -51,14 +51,3 @@ export function lookupColor(value) {
   return COLOR_TABLE.get(value) || { hex: 'transparent', opacity: 0 };
 }
 
-/**
- * Get just the hex color at full brightness for a given value.
- * Useful for ripple effects that need the base color.
- */
-export function lookupBaseHex(value) {
-  const base = value & ~3;
-  const entry = COLOR_TABLE.get(base + 3);
-  return entry ? entry.hex : '#ffffff';
-}
-
-export { BASE_COLORS };

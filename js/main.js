@@ -3,10 +3,11 @@
 import { requestMidiAccess, getInputPorts, getOutputPorts, connectActions, connectFeedback, connectOutput, setMapping, sendReturnFromHost } from './midi-engine.js';
 import { buildDefaultMapping } from './default-mapping.js';
 import { initLedRenderer } from './led-renderer.js';
-import { initUiController, updateMapping as updateUiMapping } from './ui-controller.js';
+import { initUiController, updateMapping as updateUiMapping, pressButton, setShiftActive } from './ui-controller.js';
 import { initTouchStrips, updateMapping as updateStripMapping } from './touchstrip.js';
 import { initEncoder } from './encoder.js';
 import { initEncoderDisplay } from './encoder-display.js';
+import { initKeyboard, getPresetNames, setPreset, getActivePreset } from './keyboard.js';
 import { parseNcmj } from './xml-parser.js';
 
 let currentMapping = null;
@@ -55,6 +56,10 @@ async function init() {
   initTouchStrips(currentMapping);
   initEncoder();
   initEncoderDisplay();
+  initKeyboard(pressButton, setShiftActive, {
+    '@connect': () => document.getElementById('btn-connect').click(),
+    '@conf': () => document.querySelector('.conf-tab')?.click(),
+  });
   initFootswitch();
 
   // Connect button toggles intent
@@ -73,27 +78,16 @@ async function init() {
     });
   }
 
-  // Keyboard shortcuts (unless typing in an input)
-  document.addEventListener('keydown', (e) => {
-    if (e.target.matches('input, textarea, select')) return;
-    if (e.key === ' ') {
-      e.preventDefault();
-      btnConnect.click();
-    } else if (e.key === ',') {
-      e.preventDefault();
-      document.querySelector('.conf-tab')?.click();
-    }
-  });
-
   // File upload + mapping popover
   document.getElementById('file-ncmj').addEventListener('change', onFileUpload);
   initMappingPicker();
+  initKeyboardPicker();
 
   // Auto-connect on startup if intent was saved
   if (wantConnected) {
     doConnect();
   } else {
-    showStatus('Ready. Select MIDI ports and click Connect.');
+    showStatus('Ready. Select MIDI ports and connect.');
   }
 }
 
@@ -139,27 +133,24 @@ function applyMapping(mapping, name) {
   currentMappingName = name;
   localStorage.setItem(MAPPING_STORAGE_KEY, name);
 
-  // Propagate to modules (safe to call before they're initialized — they'll get it via init args too)
-  try { setMapping(currentMapping); } catch { /* not initialized yet */ }
-  try { updateUiMapping(currentMapping); } catch { /* not initialized yet */ }
-  try { updateStripMapping(currentMapping); } catch { /* not initialized yet */ }
+  // Propagate to modules (no-op if called before init — each module stores mapping internally)
+  setMapping(currentMapping);
+  updateUiMapping(currentMapping);
+  updateStripMapping(currentMapping);
 
   updateMappingUI();
   updateFootswitchVisibility(mapping);
 }
 
-// ─── Mapping Picker Popover ───
+// ─── Popover helper ───
 
-function initMappingPicker() {
-  const btn = document.getElementById('btn-mapping');
-  const popover = document.getElementById('mapping-popover');
-
+function initPopover(btn, popover) {
   btn.addEventListener('click', () => {
     popover.hidden = !popover.hidden;
   });
 
   document.addEventListener('click', (e) => {
-    if (!popover.hidden && !popover.contains(e.target) && e.target !== btn) {
+    if (!popover.hidden && !popover.contains(e.target) && !btn.contains(e.target)) {
       popover.hidden = true;
     }
   });
@@ -169,6 +160,15 @@ function initMappingPicker() {
       popover.hidden = true;
     }
   });
+}
+
+// ─── Mapping Picker Popover ───
+
+function initMappingPicker() {
+  const btn = document.getElementById('btn-mapping');
+  const popover = document.getElementById('mapping-popover');
+
+  initPopover(btn, popover);
 
   document.getElementById('btn-open-file').addEventListener('click', () => {
     popover.hidden = true;
@@ -183,6 +183,34 @@ function updateMappingUI() {
   const label = document.getElementById('mapping-current');
   if (btn) btn.textContent = currentMappingName || '.ncmj';
   if (label) label.textContent = currentMappingName || '.ncmj';
+}
+
+// ─── Keyboard Preset Picker ───
+
+function initKeyboardPicker() {
+  const btn = document.getElementById('btn-keyboard');
+  const popover = document.getElementById('keyboard-popover');
+
+  function render() {
+    const active = getActivePreset();
+    popover.innerHTML = '';
+
+    for (const name of getPresetNames()) {
+      const item = document.createElement('button');
+      item.className = 'mapping-action';
+      item.textContent = name;
+      if (name === active) item.style.color = 'var(--accent)';
+      item.addEventListener('click', () => {
+        setPreset(name);
+        popover.hidden = true;
+        render();
+      });
+      popover.appendChild(item);
+    }
+  }
+
+  initPopover(btn, popover);
+  render();
 }
 
 // ─── MIDI Port Management ───
@@ -231,6 +259,10 @@ function toggleConnect() {
   }
 }
 
+function getPortName(sel) {
+  return sel.value ? sel.selectedOptions[0]?.textContent : 'None';
+}
+
 function doConnect() {
   const actionsSelect = document.getElementById('midi-actions');
   const feedbackSelect = document.getElementById('midi-feedback');
@@ -244,8 +276,7 @@ function doConnect() {
 
   sendReturnFromHost();
 
-  const getName = (sel) => sel.value ? sel.selectedOptions[0]?.textContent : 'None';
-  showStatus(`Connected — Actions: ${getName(actionsSelect)}, Feedback: ${getName(feedbackSelect)}, Out: ${getName(outputSelect)}`);
+  showStatus(`Connected — Actions: ${getPortName(actionsSelect)}, Feedback: ${getPortName(feedbackSelect)}, Out: ${getPortName(outputSelect)}`);
 }
 
 function doDisconnect() {
@@ -258,18 +289,17 @@ function doDisconnect() {
 
 function updateConnectButton() {
   const btn = document.getElementById('btn-connect');
-  btn.textContent = wantConnected ? 'Connected' : 'Connect';
   btn.classList.toggle('connected', wantConnected);
+  btn.title = wantConnected ? 'Disconnect MIDI ports' : 'Connect MIDI ports';
   const confGroup = document.querySelector('.conf-group');
   if (confGroup) confGroup.classList.toggle('conf-connected', wantConnected);
 }
 
 function savePortSelections(actionsSelect, feedbackSelect, outputSelect) {
-  const getName = (sel) => sel.value ? sel.selectedOptions[0]?.textContent : '';
   localStorage.setItem(PORT_STORAGE_KEY, JSON.stringify({
-    actions: getName(actionsSelect),
-    feedback: getName(feedbackSelect),
-    output: getName(outputSelect),
+    actions: actionsSelect.value ? actionsSelect.selectedOptions[0]?.textContent : '',
+    feedback: feedbackSelect.value ? feedbackSelect.selectedOptions[0]?.textContent : '',
+    output: outputSelect.value ? outputSelect.selectedOptions[0]?.textContent : '',
   }));
 }
 

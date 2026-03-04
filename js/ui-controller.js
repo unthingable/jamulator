@@ -1,10 +1,16 @@
 // DOM events → MIDI output (button press/release)
 
-import { sendCC, sendNoteOn, sendNoteOff, sendAftertouch, send } from './midi-engine.js';
+import { sendCC, sendNoteOn, sendNoteOff, send } from './midi-engine.js';
 import { buildSysEx } from './sysex.js';
 import { state } from './state.js';
 
 let currentMapping = null;
+
+const lockedButtons = new Set(); // controlIds currently toggle-locked
+
+// Dual-source shift tracking
+let shiftFromKeyboard = false;
+let shiftFromPointer = false;
 
 /**
  * Initialize the UI controller with the given mapping.
@@ -21,8 +27,93 @@ export function updateMapping(mapping) {
   currentMapping = mapping;
 }
 
+/**
+ * Dual-source shift: keyboard and pointer can both drive BtnShift.
+ * Only emits state/MIDI when the combined active state changes.
+ */
+export function setShiftActive(source, down) {
+  if (source === 'keyboard') shiftFromKeyboard = down;
+  else shiftFromPointer = down;
+  const active = shiftFromKeyboard || shiftFromPointer;
+  if (active !== state.shiftDown) {
+    state.setPressed('BtnShift', active);
+    state.setShift(active);
+    send(buildSysEx(0x4D, [active ? 0x01 : 0x00]));
+  }
+}
+
+/**
+ * Press or release a button. Called from pointer handlers and keyboard.js.
+ */
+export function pressButton(controlId, pressed, { altKey = false } = {}) {
+  // Shift uses dual-source logic
+  if (controlId === 'BtnShift') {
+    setShiftActive('pointer', pressed);
+    return;
+  }
+
+  // Unlock: if locked and pressing again → unlock and release
+  if (lockedButtons.has(controlId) && pressed) {
+    lockedButtons.delete(controlId);
+    const el = document.querySelector(`[data-control-id="${controlId}"]`);
+    if (el) el.classList.remove('locked');
+    doRelease(controlId);
+    return;
+  }
+
+  // Skip release for locked buttons (they stay pressed)
+  if (lockedButtons.has(controlId) && !pressed) {
+    return;
+  }
+
+  if (pressed) {
+    doPress(controlId);
+    // Alt+press → lock (not for shift)
+    if (altKey) {
+      lockedButtons.add(controlId);
+      const el = document.querySelector(`[data-control-id="${controlId}"]`);
+      if (el) el.classList.add('locked');
+    }
+  } else {
+    doRelease(controlId);
+  }
+}
+
+function doPress(controlId) {
+  if (!currentMapping) return;
+  const def = currentMapping.outputMap.get(controlId);
+  if (!def) return;
+
+  state.setPressed(controlId, true);
+
+  switch (def.type) {
+    case 'cc':
+      sendCC(def.channel, def.number, 127);
+      break;
+    case 'note':
+      sendNoteOn(def.channel, def.number, 127);
+      break;
+  }
+}
+
+function doRelease(controlId) {
+  if (!currentMapping) return;
+  const def = currentMapping.outputMap.get(controlId);
+  if (!def) return;
+
+  state.setPressed(controlId, false);
+
+  switch (def.type) {
+    case 'cc':
+      sendCC(def.channel, def.number, 0);
+      break;
+    case 'note':
+      sendNoteOff(def.channel, def.number);
+      break;
+  }
+}
+
 function bindButtons() {
-  // All clickable controls
   document.querySelectorAll('[data-control-id]').forEach(el => {
     const controlId = el.dataset.controlId;
 
@@ -32,52 +123,20 @@ function bindButtons() {
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       el.setPointerCapture(e.pointerId);
-      onPress(controlId, true);
+      pressButton(controlId, true, { altKey: e.altKey });
     });
 
     el.addEventListener('pointerup', (e) => {
       el.releasePointerCapture(e.pointerId);
-      onPress(controlId, false);
+      pressButton(controlId, false);
     });
 
     el.addEventListener('pointercancel', (e) => {
       el.releasePointerCapture(e.pointerId);
-      onPress(controlId, false);
+      pressButton(controlId, false);
     });
 
     // Prevent context menu on long press
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   });
-}
-
-function onPress(controlId, pressed) {
-  // Shift uses SysEx, not CC/Note
-  if (controlId === 'BtnShift') {
-    state.setPressed(controlId, pressed);
-    state.setShift(pressed);
-    send(buildSysEx(0x4D, [pressed ? 0x01 : 0x00]));
-    return;
-  }
-
-  if (!currentMapping) return;
-  const def = currentMapping.outputMap.get(controlId);
-  if (!def) return;
-
-  // Update local pressed state
-  state.setPressed(controlId, pressed);
-
-  const value = pressed ? 127 : 0;
-
-  switch (def.type) {
-    case 'cc':
-      sendCC(def.channel, def.number, value);
-      break;
-    case 'note':
-      if (pressed) {
-        sendNoteOn(def.channel, def.number, 127);
-      } else {
-        sendNoteOff(def.channel, def.number);
-      }
-      break;
-  }
 }

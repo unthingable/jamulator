@@ -55,6 +55,7 @@ body {
   column-gap: 14px;
   row-gap: var(--section-gap);
   position: relative;
+  width: 100%;
   max-width: 690px;
 }
 
@@ -306,6 +307,12 @@ body {
   animation: press-pulse 1.5s ease-in-out infinite;
 }
 
+/* Toggle-locked buttons (Option+click) */
+.jam-btn.locked {
+  outline: 2px solid var(--accent, #4adeaa);
+  outline-offset: -2px;
+}
+
 /* Colored LED buttons: tinted off-state backlight */
 [data-control-id=BtnPlay] {
   --btn-tint: 74 222 128;
@@ -465,7 +472,7 @@ body {
 .encoder.hover {
   outline-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
-.encoder.hover.shift-hover {
+.encoder.hover.push-hover {
   outline-color: color-mix(in srgb, #e08030 50%, transparent);
 }
 .encoder.touched.hover {
@@ -925,30 +932,42 @@ body {
   padding-left: 7px;
 }
 
-#btn-connect {
-  min-width: 92px;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
 }
-#btn-connect.connected {
+.icon-btn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.icon-btn:hover {
+  color: #ccc;
+  border-color: #4a4a4a;
+}
+
+#toolbar #btn-connect.connected {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, #333);
 }
 
-.connect-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+.keyboard-picker {
+  position: relative;
   flex-shrink: 0;
 }
 
-kbd.hint {
-  color: #555;
-  font-size: 9px;
-  font-family: inherit;
-}
-
-.mapping-btn, #toolbar button {
+.mapping-btn, #toolbar button:not(.icon-btn) {
   background: #2a2a2a;
   color: #aaa;
   border: 1px solid #444;
@@ -966,12 +985,12 @@ kbd.hint {
   align-items: center;
   flex-shrink: 0;
 }
-.mapping-btn:hover, #toolbar button:hover {
+.mapping-btn:hover, #toolbar button:hover:not(.icon-btn) {
   background: #2e2e2e;
   color: #bbb;
   border-color: #4a4a4a;
 }
-.mapping-btn:active, #toolbar button:active {
+.mapping-btn:active, #toolbar button:active:not(.icon-btn) {
   background: color-mix(in srgb, var(--accent) 15%, #1a1a1a);
   border-color: var(--accent);
   color: var(--accent);
@@ -981,12 +1000,12 @@ kbd.hint {
   display: none;
 }
 
-#btn-zoom-mode {
+#toolbar #btn-zoom-mode {
   font-size: 10px;
   line-height: 1;
   padding: 0 8px;
 }
-#btn-zoom-mode.active {
+#toolbar #btn-zoom-mode.active {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, #333);
 }
@@ -996,7 +1015,7 @@ body.zoom-fit {
   padding: 0;
   overflow: hidden;
 }
-body.zoom-fit h1 {
+body.zoom-fit h1, body.zoom-fit #status {
   display: none;
 }
 body.zoom-fit #toolbar {
@@ -1012,7 +1031,7 @@ body.zoom-fit #toolbar {
 .mapping-popover {
   position: absolute;
   bottom: calc(100% + 6px);
-  right: 0;
+  left: 0;
   background: #242424;
   border: 1px solid #444;
   border-radius: 6px;
@@ -1144,7 +1163,7 @@ h1 {
   body:not(.zoom-fit) .port-group {
     flex-basis: calc(50% - 4px);
   }
-  body:not(.zoom-fit) #toolbar button, body:not(.zoom-fit) .mapping-btn, #toolbar body:not(.zoom-fit) button {
+  body:not(.zoom-fit) #toolbar button, body:not(.zoom-fit) .mapping-btn, #toolbar body:not(.zoom-fit) button:not(.icon-btn) {
     flex: 1;
     justify-content: center;
   }
