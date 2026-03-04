@@ -188,11 +188,22 @@ function onMidiMessage(event, source) {
     case 0xB0: { // CC
       const cc = data[1];
       const value = data[2];
+
+      // Strip touch CCs: 20-27 map to TstA-TstH (position CC + 12)
+      if (channel === 0 && cc >= 20 && cc <= 27) {
+        const STRIP_IDS = ['TstA','TstB','TstC','TstD','TstE','TstF','TstG','TstH'];
+        state.setStripTouched(STRIP_IDS[cc - 20], value > 0);
+        break;
+      }
+
       const controlId = currentMapping.inputMap.get(`cc:${channel}:${cc}`);
       if (controlId) {
         if (controlId.startsWith('Tst')) {
-          // Strip value via CC (SINGLE/PAN mode)
-          state.setStripValue(controlId, value);
+          if (source === 'feedback') {
+            state.setStripValue(controlId, value);
+          } else {
+            state.setStripFingerPos(controlId, value);
+          }
         } else if (controlId === 'EncTurn') {
           // Relative 2's complement: 1-63 = CW, 65-127 = CCW
           const direction = value < 64 ? 1 : -1;
@@ -247,10 +258,10 @@ function handleSysEx(data) {
       break;
     }
     case 0x04: {
-      // Strip bar positions (DUAL mode)
+      // Strip bar positions (DUAL mode) — second value, separate from CC
       const values = parseStripValues(parsed.payload);
       for (let i = 0; i < values.length; i++) {
-        state.setStripValue(STRIP_IDS[i], values[i]);
+        state.setStripValue2(STRIP_IDS[i], values[i]);
       }
       break;
     }

@@ -7,15 +7,18 @@ let currentMapping = null;
 
 export function initTouchStrips(mapping) {
   currentMapping = mapping;
-  document.querySelectorAll('.touch-strip[data-control-id]').forEach(bindStrip);
+  document.querySelectorAll('.strip-unit[data-control-id]').forEach(unit => {
+    const strip = unit.querySelector('.touch-strip');
+    if (strip) bindStrip(strip, unit);
+  });
 }
 
 export function updateMapping(mapping) {
   currentMapping = mapping;
 }
 
-function bindStrip(el) {
-  const controlId = el.dataset.controlId;
+function bindStrip(el, unit) {
+  const controlId = unit.dataset.controlId;
 
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
@@ -59,7 +62,7 @@ function onStripStart(el, controlId, e) {
   // Send initial value
   const value = posToValue(el, e.clientY);
   sendCC(def.channel, def.number, value);
-  state.setStripValue(controlId, value);
+  state.setStripFingerPos(controlId, value);
 }
 
 function onStripMove(el, controlId, e) {
@@ -69,7 +72,7 @@ function onStripMove(el, controlId, e) {
 
   const value = posToValue(el, e.clientY);
   sendCC(def.channel, def.number, value);
-  state.setStripValue(controlId, value);
+  state.setStripFingerPos(controlId, value);
 }
 
 function onStripEnd(el, controlId) {

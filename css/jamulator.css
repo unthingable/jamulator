@@ -249,7 +249,64 @@ body {
   background: linear-gradient(to bottom, #706c68, #5a5754);
 }
 .jam-btn {
-  /* ─── Inverted buttons: black rectangle, cutout lettering ─── */
+  /* ─── Inverted buttons: black rectangle, cutout lettering ───
+     Silicon base visible as 2px rim. ::before renders white-on-black text
+     with mix-blend-mode: multiply so black stays opaque and white text
+     "cuts through" to reveal the silicon / LED color underneath.        */
+}
+.jam-btn.inverted {
+  background: linear-gradient(to bottom, #908c88, #7e7a76);
+  color: transparent; /* hide real text — ::before renders the cutout */
+  isolation: isolate;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.jam-btn.inverted::before {
+  content: attr(data-label);
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #252525, #1a1a1a);
+  color: white;
+  mix-blend-mode: multiply;
+  border-radius: 1px;
+  pointer-events: none;
+  font-size: inherit;
+  font-weight: inherit;
+  font-stretch: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: center;
+  padding: 2px;
+  white-space: nowrap;
+}
+.jam-btn.inverted:hover {
+  background: linear-gradient(to bottom, #a8a4a0, #969290);
+}
+.jam-btn.inverted:hover::before {
+  background: linear-gradient(to bottom, #2e2e2e, #232323);
+}
+.jam-btn.inverted:active, .jam-btn.inverted.pressed {
+  color: transparent;
+  background: linear-gradient(to bottom, #7e7a76, #858178);
+  transform: scale(0.95);
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.jam-btn.inverted {
+  /* Lit: LED backlight through cutout text + silicon rim glows */
+}
+.jam-btn.inverted.lit {
+  color: transparent;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2), transparent 90%), color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), #908c88);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 60%), transparent);
+}
+.jam-btn.inverted.lit.pressed {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent), 0 0 4px #fff;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
 }
 
 /* Colored LED buttons: tinted off-state backlight */
@@ -365,8 +422,8 @@ body {
 }
 
 .encoder {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #505050, #353535 60%, #282828);
   border: 2px solid #505050;
@@ -381,11 +438,11 @@ body {
 .encoder::after {
   content: "";
   position: absolute;
-  top: 3px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   width: 2px;
-  height: 4px;
+  height: 3px;
   background: #888;
   border-radius: 2px;
   transition: transform 0.1s;
@@ -535,46 +592,18 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
-   Touch Strips
+   Touch Strips + LED Segment Bars
    ═══════════════════════════════════════════════ */
-.touch-strip {
-  width: 100%;
+.strip-unit {
+  display: flex;
+  gap: 2px;
   height: var(--strip-height);
-  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 5px, #2a2a2a 5px, #2a2a2a 6px), #111;
-  border: 1px solid #2a2a2a;
-  border-radius: 3px;
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  --strip-value: 0%;
   --strip-color: #666;
   --strip-brightness: 0.5;
   --finger-pos: 100%;
-  /* Strip bar fill — default SINGLE mode: fills from bottom */
+  /* Touch indicator circle on surface */
 }
-.touch-strip::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--strip-value);
-  background: repeating-linear-gradient(to bottom, var(--strip-color) 0px, var(--strip-color) 5px, transparent 5px, transparent 6px);
-  opacity: var(--strip-brightness);
-  transition: height 0.03s linear;
-}
-.touch-strip {
-  /* DOT mode */
-}
-.touch-strip.mode-dot::before {
-  height: 6px;
-  bottom: var(--strip-value);
-  border-radius: 2px;
-}
-.touch-strip {
-  /* Touch indicator */
-}
-.touch-strip.touched::after {
+.strip-unit.touched .touch-strip::after {
   content: "";
   position: absolute;
   left: 50%;
@@ -590,6 +619,17 @@ body {
   z-index: 2;
 }
 
+.touch-strip {
+  flex: 1;
+  min-width: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 5px, #2a2a2a 5px, #2a2a2a 6px), #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  overflow: visible;
+}
+
 @keyframes finger-pulse {
   0%, 100% {
     opacity: 0.6;
@@ -600,36 +640,67 @@ body {
     transform: translate(-50%, -50%) scale(1.2);
   }
 }
+/* ─── LED Segment Bar ─── */
+.strip-segments {
+  display: flex;
+  flex-direction: column;
+  width: 2.2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.seg {
+  flex: 1;
+  min-height: 0;
+  background: #1a1a1a;
+  border-radius: 0.5px;
+  transition: background 0.03s, box-shadow 0.03s;
+}
+.seg.lit {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25), transparent 70%), var(--seg-color, #666);
+  box-shadow: 0 0 4px color-mix(in oklch, var(--seg-color, #666) calc(var(--seg-brightness, 1) * 80%), transparent), 0 0 8px color-mix(in oklch, var(--seg-color, #666) calc(var(--seg-brightness, 1) * 40%), transparent);
+}
+.seg.dot {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4), transparent 70%), #fff;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
 /* ═══════════════════════════════════════════════
    Level Meters (top of right column)
    ═══════════════════════════════════════════════ */
 .level-meters {
   display: flex;
-  gap: 13px;
+  gap: 19px;
   align-items: flex-end;
   height: 80px;
   padding: 0 2px;
+  padding-top: 10px;
 }
 
 .level-bar {
-  width: 4px;
+  display: flex;
+  flex-direction: column;
+  width: 2.2px;
   height: 100%;
-  background: #111;
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-  --level: 0%;
+  gap: 2px;
 }
-.level-bar::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(to top, #00ff00, #ffee00, #ff0020);
-  clip-path: inset(calc(100% - var(--level)) 0 0 0);
-  transition: clip-path 0.05s;
+.level-bar .seg {
+  flex: 1;
+  min-height: 0;
+  background: #1a1a1a;
+  border-radius: 0.5px;
+  transition: background 0.03s, box-shadow 0.03s;
+}
+.level-bar .seg.lit {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25), transparent 70%), #ddd;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(255, 255, 255, 0.3);
+}
+.level-bar .seg {
+  /* Top segment (first child) is red when lit */
+}
+.level-bar .seg:first-child.lit {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25), transparent 70%), #e03030;
+  box-shadow: 0 0 4px rgba(224, 48, 48, 0.6), 0 0 8px rgba(224, 48, 48, 0.3);
 }
 
 /* ═══════════════════════════════════════════════

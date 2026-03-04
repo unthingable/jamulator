@@ -15,8 +15,8 @@
 
     <div class="left-upper">
       <div class="jam-btn btn-onoff" data-control-id="BtnArrange">Song</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnStep">Step</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnPadMode">Pad Mode</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnStep" data-label="Step">Step</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnPadMode" data-label="Pad Mode">Pad Mode</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnClear">Clear</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnDuplicate">Duplicate</div>
       <div class="col-spacer" style="flex: 1; height: auto"></div>
@@ -53,8 +53,8 @@
 
     <div class="right-upper">
       <div class="level-meters">
-        <div class="level-bar" id="level-l"></div>
-        <div class="level-bar" id="level-r"></div>
+        <div class="level-bar" id="level-l"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+        <div class="level-bar" id="level-r"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
       </div>
       <div class="right-pair-row">
         <div class="jam-btn btn-onoff btn-half" data-control-id="BtnMst">Mst</div>
@@ -97,39 +97,39 @@
     <!-- ═══ LOWER ZONE: Touch Strips ═══ -->
 
     <div class="left-lower">
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnMacro">Macro</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnLevel">Level</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnAux">Aux</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnMacro" data-label="Macro">Macro</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnLevel" data-label="Level">Level</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnAux" data-label="Aux">Aux</div>
       <div class="col-spacer"></div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnControl">Control</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnAuto">Auto</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnControl" data-label="Control">Control</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnAuto" data-label="Auto">Auto</div>
     </div>
 
     <div class="center-lower">
       <div class="strips-row">
-        <div class="touch-strip" data-control-id="TstA"></div>
-        <div class="touch-strip" data-control-id="TstB"></div>
-        <div class="touch-strip" data-control-id="TstC"></div>
-        <div class="touch-strip" data-control-id="TstD"></div>
-        <div class="touch-strip" data-control-id="TstE"></div>
-        <div class="touch-strip" data-control-id="TstF"></div>
-        <div class="touch-strip" data-control-id="TstG"></div>
-        <div class="touch-strip" data-control-id="TstH"></div>
+        <div class="strip-unit" data-control-id="TstA"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstB"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstC"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstD"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstE"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstF"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstG"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
+        <div class="strip-unit" data-control-id="TstH"><div class="touch-strip"></div><div class="strip-segments"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div></div>
       </div>
     </div>
 
     <div class="right-lower">
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnPerform">Perform</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnVariation">Notes</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnLock">Lock</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnPerform" data-label="Perform">Perform</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnVariation" data-label="Notes">Notes</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnLock" data-label="Lock">Lock</div>
       <div class="col-spacer"></div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnTune">Tune</div>
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnSwing">Swing</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnTune" data-label="Tune">Tune</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnSwing" data-label="Swing">Swing</div>
     </div>
 
     <!-- ═══ Bottom Row ═══ -->
     <div class="bottom-row">
-      <div class="jam-btn btn-onoff inverted" data-control-id="BtnShift">Shift</div>
+      <div class="jam-btn btn-onoff inverted" data-control-id="BtnShift" data-label="Shift">Shift</div>
       <div class="bottom-spacer"></div>
       <div class="jam-btn btn-onoff" data-control-id="BtnPlay">Play</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnRecord">Rec</div>

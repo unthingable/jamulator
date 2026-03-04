@@ -13,6 +13,10 @@ class State extends EventTarget {
     this.stripTouched = new Map();
     // Strip LED modes: controlId → { mode, color }
     this.stripLeds = new Map();
+    // Strip second value (DUAL mode bar fill): controlId → 0-127
+    this.stripValues2 = new Map();
+    // Strip finger position (from pointer events): controlId → 0-127
+    this.stripFingerPos = new Map();
     // Encoder state
     this.encoderPushed = false;
     this.encoderTouched = false;
@@ -70,6 +74,24 @@ class State extends EventTarget {
 
   getStripLed(controlId) {
     return this.stripLeds.get(controlId) || { mode: 0, color: 0 };
+  }
+
+  setStripValue2(controlId, value) {
+    this.stripValues2.set(controlId, value);
+    this._emit('strip-value2-change', { controlId, value });
+  }
+
+  getStripValue2(controlId) {
+    return this.stripValues2.get(controlId) || 0;
+  }
+
+  setStripFingerPos(controlId, value) {
+    this.stripFingerPos.set(controlId, value);
+    this._emit('strip-finger-change', { controlId, value });
+  }
+
+  getStripFingerPos(controlId) {
+    return this.stripFingerPos.get(controlId) || 0;
   }
 
   setEncoderPushed(pushed) {

@@ -90,11 +90,12 @@ for (let col = 0; col < 8; col++) {
   }
 }
 
-// Touch strips: CC for values, aftertouch for touch sensors
+// Touch strips: CC for values, separate CC for touch on/off
 const STRIP_LETTERS = ['A','B','C','D','E','F','G','H'];
 const TOUCH_STRIPS = STRIP_LETTERS.map((letter, i) => ({
   controlId: `Tst${letter}`,
   cc: 8 + i,
+  touchCc: 20 + i,
   aftertouchNote: 8 + i,
   channel: 0,
   label: `Strip ${letter}`,
