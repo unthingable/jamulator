@@ -9,6 +9,7 @@
 <body>
   <h1>Jamulator</h1>
 
+  <div class="controller-wrap">
   <div id="controller">
 
     <!-- ═══ UPPER ZONE: Scene + Matrix ═══ -->
@@ -52,6 +53,13 @@
     </div>
 
     <div class="right-upper">
+      <div class="fsw-group" hidden>
+        <div class="fsw-tab">FSW</div>
+        <div class="fsw-indicators">
+          <div class="footswitch" data-control-id="FswTip">TIP</div>
+          <div class="footswitch" data-control-id="FswRing">RNG</div>
+        </div>
+      </div>
       <div class="level-meters">
         <div class="level-bar" id="level-l"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
         <div class="level-bar" id="level-r"><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
@@ -133,8 +141,8 @@
       <div class="bottom-spacer"></div>
       <div class="jam-btn btn-onoff" data-control-id="BtnPlay">Play</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnRecord">Rec</div>
-      <div class="jam-btn btn-onoff" data-control-id="BtnArrowLeft">&lt;</div>
-      <div class="jam-btn btn-onoff" data-control-id="BtnArrowRight">&gt;</div>
+      <div class="jam-btn btn-onoff" data-control-id="BtnArrowLeft">&#9664;</div>
+      <div class="jam-btn btn-onoff" data-control-id="BtnArrowRight">&#9654;</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnTempo">Tempo</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnGrid">Grid</div>
       <div class="jam-btn btn-onoff" data-control-id="BtnSolo">Solo</div>
@@ -146,27 +154,32 @@
     <div class="resize-handle resize-handle-r"></div>
   </div>
 
+  </div><!-- .controller-wrap -->
+
   <!-- ═══ Toolbar ═══ -->
   <div id="toolbar">
     <div class="port-group">
-      <label for="midi-actions">Actions In</label>
+      <label for="midi-actions">From Jam</label>
       <select id="midi-actions">
         <option value="">-- None --</option>
       </select>
     </div>
     <div class="port-group">
-      <label for="midi-feedback">Feedback In</label>
+      <label for="midi-feedback">From DAW</label>
       <select id="midi-feedback">
         <option value="">-- None --</option>
       </select>
     </div>
     <div class="port-group">
-      <label for="midi-output">MIDI Out</label>
+      <label for="midi-output">To DAW</label>
       <select id="midi-output">
         <option value="">-- None --</option>
       </select>
     </div>
-    <button id="btn-connect">Connect</button>
+    <div class="connect-group">
+      <kbd class="hint">space</kbd>
+      <button id="btn-connect">Connect</button>
+    </div>
     <div class="mapping-picker">
       <button id="btn-mapping" class="mapping-btn">.ncmj</button>
       <div id="mapping-popover" class="mapping-popover" hidden>

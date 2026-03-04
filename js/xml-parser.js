@@ -1,7 +1,9 @@
 // .ncmj XML parser
 // Handles Native Instruments controller mapping files in two formats:
-// 1. Native NI format: <button>/<knob>/<wheel>/<led> with child elements
+// 1. Native NI format: <button>/<knob>/<wheel>/<footswitch>/<led> with child elements
 // 2. Template format: <Template><Entry> with attributes
+
+import { addInput } from './default-mapping.js';
 
 // ID renames: ncmj internal names → Jamulator controlIds
 const ID_RENAMES = {
@@ -44,93 +46,109 @@ export function parseNcmj(xmlString) {
  * Parse native NI .ncmj format.
  * Elements: <button>, <knob>, <wheel> (interactive), <led> (input-only feedback).
  * MIDI info stored in child elements: <controller>, <note>, <polyat>, <channel>.
+ *
+ * Paged sections (scenePages, iolevelPages, touchstripPages) use current_index
+ * to select the active page — only that page's elements are parsed.
  */
 function parseNativeFormat(doc, outputMap, inputMap) {
-  const aftertouches = []; // polyat entries deferred to pass 2
+  const activeRoots = getActiveElements(doc);
+  const touchSensors = []; // cap sensor entries deferred to pass 2
 
-  // Pass 1: all <button>, <knob>, <wheel> elements (first occurrence wins)
-  for (const el of doc.querySelectorAll('button, knob, wheel')) {
-    const rawId = el.getAttribute('id');
-    if (!rawId) continue;
+  // Pass 1: <button>, <knob>, <wheel>, <footswitch> from active elements only
+  for (const root of activeRoots) {
+    for (const el of root.querySelectorAll('button, knob, wheel, footswitch')) {
+      const rawId = el.getAttribute('id');
+      if (!rawId) continue;
 
-    const channel = intChild(el, 'channel', 0);
-    const ccEl = el.querySelector('controller');
-    const noteEl = el.querySelector('note');
-    const polyatEl = el.querySelector('polyat');
+      const channel = intChild(el, 'channel', 0);
+      const ccEl = el.querySelector('controller');
+      const noteEl = el.querySelector('note');
+      const polyatEl = el.querySelector('polyat');
 
-    let midiType, number;
+      let midiType, number;
 
-    if (polyatEl) {
-      // Aftertouch cap sensor — defer to pass 2
-      number = parseInt(polyatEl.textContent, 10);
-      aftertouches.push({ rawId, channel, number });
-      continue;
-    } else if (noteEl) {
-      midiType = 'note';
-      number = parseInt(noteEl.textContent, 10);
-    } else if (ccEl) {
-      midiType = 'cc';
-      number = parseInt(ccEl.textContent, 10);
-    } else {
-      continue;
+      if (polyatEl) {
+        // Aftertouch cap sensor — defer to pass 2
+        number = parseInt(polyatEl.textContent, 10);
+        touchSensors.push({ rawId, channel, number, sensorType: 'aftertouch' });
+        continue;
+      } else if (ccEl && rawId.startsWith('CapTst')) {
+        // CC-mapped cap sensor (e.g. page H) — defer to pass 2
+        number = parseInt(ccEl.textContent, 10);
+        touchSensors.push({ rawId, channel, number, sensorType: 'cc' });
+        continue;
+      } else if (noteEl) {
+        midiType = 'note';
+        number = parseInt(noteEl.textContent, 10);
+      } else if (ccEl) {
+        midiType = 'cc';
+        number = parseInt(ccEl.textContent, 10);
+      } else {
+        continue;
+      }
+
+      const controlId = normalizeId(rawId);
+      if (outputMap.has(controlId)) continue; // first occurrence wins
+
+      const def = { type: midiType, channel, number, controlId, label: rawId };
+      outputMap.set(controlId, def);
+      addInput(inputMap, `${midiType}:${channel}:${number}`, controlId);
     }
-
-    const controlId = normalizeId(rawId);
-    if (outputMap.has(controlId)) continue; // first occurrence wins (pages have duplicates)
-
-    const def = { type: midiType, channel, number, controlId, label: rawId };
-    outputMap.set(controlId, def);
-    inputMap.set(`${midiType}:${channel}:${number}`, controlId);
   }
 
-  // Pass 2: link aftertouch entries to their strip control
-  const seenAftertouch = new Set();
-  for (const { rawId, channel, number } of aftertouches) {
+  // Pass 2: link touch sensor entries to their parent strip control
+  const seen = new Set();
+  for (const { rawId, channel, number, sensorType } of touchSensors) {
     const key = `${rawId}:${channel}:${number}`;
-    if (seenAftertouch.has(key)) continue; // skip duplicates across pages
-    seenAftertouch.add(key);
+    if (seen.has(key)) continue;
+    seen.add(key);
 
-    // CapTstA → try TstA, CapBrowse → try Browse
+    // CapTstA → TstA, CapBrowse → EncTouch (via normalizeId)
     const strippedId = rawId.replace(/^Cap/, '');
     const targetId = normalizeId(strippedId);
     const targetDef = outputMap.get(targetId);
     if (targetDef) {
-      targetDef.aftertouchNote = number;
-      inputMap.set(`aftertouch:${channel}:${number}`, targetId);
+      if (sensorType === 'cc') {
+        targetDef.touchCc = number;
+      } else {
+        targetDef.aftertouchNote = number;
+      }
+      addInput(inputMap, `${sensorType}:${channel}:${number}`, targetId);
     } else {
-      // Standalone aftertouch — use normalized ID
       const controlId = normalizeId(rawId);
-      inputMap.set(`aftertouch:${channel}:${number}`, controlId);
+      addInput(inputMap, `${sensorType}:${channel}:${number}`, controlId);
     }
   }
 
   // Pass 3: <led> elements — input-only feedback mappings
-  for (const el of doc.querySelectorAll('led')) {
-    const rawId = el.getAttribute('id');
-    if (!rawId) continue;
+  for (const root of activeRoots) {
+    for (const el of root.querySelectorAll('led')) {
+      const rawId = el.getAttribute('id');
+      if (!rawId) continue;
 
-    // Strip "IDX" suffix: BtnGroupAIDX → BtnGroupA
-    const controlId = rawId.replace(/IDX$/, '');
-    if (!outputMap.has(controlId)) continue; // only add LED input for known controls
+      // Strip "IDX" suffix: BtnGroupAIDX → BtnGroupA
+      const controlId = rawId.replace(/IDX$/, '');
+      if (!outputMap.has(controlId)) continue; // only add LED input for known controls
 
-    const channel = intChild(el, 'channel', 0);
-    const ccEl = el.querySelector('controller');
-    const noteEl = el.querySelector('note');
+      const channel = intChild(el, 'channel', 0);
+      const ccEl = el.querySelector('controller');
+      const noteEl = el.querySelector('note');
 
-    let midiType, number;
-    if (noteEl) {
-      midiType = 'note';
-      number = parseInt(noteEl.textContent, 10);
-    } else if (ccEl) {
-      midiType = 'cc';
-      number = parseInt(ccEl.textContent, 10);
-    } else {
-      continue;
-    }
+      let midiType, number;
+      if (noteEl) {
+        midiType = 'note';
+        number = parseInt(noteEl.textContent, 10);
+      } else if (ccEl) {
+        midiType = 'cc';
+        number = parseInt(ccEl.textContent, 10);
+      } else {
+        continue;
+      }
 
-    const key = `${midiType}:${channel}:${number}`;
-    if (!inputMap.has(key)) {
-      inputMap.set(key, controlId);
+      const key = `${midiType}:${channel}:${number}`;
+      if (!inputMap.has(key)) {
+        addInput(inputMap, key, controlId);
+      }
     }
   }
 
@@ -138,9 +156,38 @@ function parseNativeFormat(doc, outputMap, inputMap) {
   for (const h of HARDCODED) {
     if (!outputMap.has(h.controlId)) {
       outputMap.set(h.controlId, { ...h, label: h.controlId });
-      inputMap.set(`${h.type}:${h.channel}:${h.number}`, h.controlId);
+      addInput(inputMap, `${h.type}:${h.channel}:${h.number}`, h.controlId);
     }
   }
+}
+
+/**
+ * Collect the active element roots from paged sections.
+ * Each paged section (scenePages, iolevelPages, touchstripPages) has a
+ * current_index selecting which child page is active.
+ */
+function getActiveElements(doc) {
+  const roots = [];
+
+  // Main controls (not paged)
+  const controls = doc.querySelector('controls');
+  if (controls) roots.push(controls);
+
+  // Paged sections
+  for (const [section, childTag] of [
+    ['scenePages', 'scene'],
+    ['iolevelPages', 'page'],
+    ['touchstripPages', 'page'],
+  ]) {
+    const sectionEl = doc.querySelector(section);
+    if (!sectionEl) continue;
+    const indexEl = sectionEl.querySelector('current_index');
+    const index = indexEl ? parseInt(indexEl.textContent, 10) : 0;
+    const pages = sectionEl.querySelectorAll(`:scope > ${childTag}`);
+    if (pages[index]) roots.push(pages[index]);
+  }
+
+  return roots;
 }
 
 function normalizeId(rawId) {
@@ -185,11 +232,11 @@ function parseTemplateFormat(doc, outputMap, inputMap) {
     const controlId = section ? `${section}${idAttr}` : idAttr;
     const def = { type: midiType, channel, number, controlId, label: idAttr };
     outputMap.set(controlId, def);
-    inputMap.set(`${midiType}:${channel}:${number}`, controlId);
+    addInput(inputMap, `${midiType}:${channel}:${number}`, controlId);
   }
 
   for (const { controlId, channel, number } of aftertouches) {
-    inputMap.set(`aftertouch:${channel}:${number}`, controlId);
+    addInput(inputMap, `aftertouch:${channel}:${number}`, controlId);
     const stripDef = outputMap.get(controlId);
     if (stripDef) {
       stripDef.aftertouchNote = number;
@@ -221,6 +268,6 @@ function parseFlatFormat(doc, outputMap, inputMap) {
 
     const def = { type: midiType, channel: ch, number: num, controlId: id, label: id };
     outputMap.set(id, def);
-    inputMap.set(`${midiType}:${ch}:${num}`, id);
+    addInput(inputMap, `${midiType}:${ch}:${num}`, id);
   }
 }

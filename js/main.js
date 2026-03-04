@@ -11,11 +11,13 @@ import { parseNcmj } from './xml-parser.js';
 
 let currentMapping = null;
 let currentMappingName = null;
-const connectedPorts = { actions: '', feedback: '', output: '' };
 
 const PORT_STORAGE_KEY = 'jamulator-midi-ports';
+const INTENT_STORAGE_KEY = 'jamulator-connect-intent';
 const MAPPING_STORAGE_KEY = 'jamulator-mapping';
 const DEFAULT_NCMJ = 'mappings/ext.ncmj';
+
+let wantConnected = localStorage.getItem(INTENT_STORAGE_KEY) === 'true';
 
 async function init() {
   // Resize handles (init early — no async dependency)
@@ -40,6 +42,7 @@ async function init() {
   document.addEventListener('midi-ports-changed', () => {
     populatePortDropdowns();
     restorePortSelections();
+    if (wantConnected) doConnect();
   });
 
   // Set mapping
@@ -50,17 +53,25 @@ async function init() {
   initTouchStrips(currentMapping);
   initEncoder();
   initEncoderDisplay();
+  initFootswitch();
 
-  // Connect button
+  // Connect button toggles intent
   const btnConnect = document.getElementById('btn-connect');
-  btnConnect.addEventListener('click', onConnect);
+  btnConnect.addEventListener('click', toggleConnect);
+  updateConnectButton();
 
-  // Port change → show "Reconnect" when selections differ from connected ports
+  // Port change → disconnect and drop intent so user can reconfigure
   for (const id of ['midi-actions', 'midi-feedback', 'midi-output']) {
-    document.getElementById(id).addEventListener('change', onPortSelectionChange);
+    document.getElementById(id).addEventListener('change', () => {
+      if (wantConnected) {
+        wantConnected = false;
+        localStorage.setItem(INTENT_STORAGE_KEY, false);
+        doDisconnect();
+      }
+    });
   }
 
-  // Spacebar → press connect button (unless typing in an input)
+  // Spacebar → toggle connect (unless typing in an input)
   document.addEventListener('keydown', (e) => {
     if (e.key === ' ' && !e.target.matches('input, textarea, select')) {
       e.preventDefault();
@@ -72,7 +83,12 @@ async function init() {
   document.getElementById('file-ncmj').addEventListener('change', onFileUpload);
   initMappingPicker();
 
-  showStatus('Ready. Select MIDI ports and click Connect.');
+  // Auto-connect on startup if intent was saved
+  if (wantConnected) {
+    doConnect();
+  } else {
+    showStatus('Ready. Select MIDI ports and click Connect.');
+  }
 }
 
 // ─── Mapping Loading ───
@@ -123,6 +139,7 @@ function applyMapping(mapping, name) {
   try { updateStripMapping(currentMapping); } catch { /* not initialized yet */ }
 
   updateMappingUI();
+  updateFootswitchVisibility(mapping);
 }
 
 // ─── Mapping Picker Popover ───
@@ -198,7 +215,17 @@ function populatePortDropdowns() {
   if (prevOutput) outputSelect.value = prevOutput;
 }
 
-function onConnect() {
+function toggleConnect() {
+  wantConnected = !wantConnected;
+  localStorage.setItem(INTENT_STORAGE_KEY, wantConnected);
+  if (wantConnected) {
+    doConnect();
+  } else {
+    doDisconnect();
+  }
+}
+
+function doConnect() {
   const actionsSelect = document.getElementById('midi-actions');
   const feedbackSelect = document.getElementById('midi-feedback');
   const outputSelect = document.getElementById('midi-output');
@@ -206,34 +233,27 @@ function onConnect() {
   connectFeedback(feedbackSelect.value);
   connectOutput(outputSelect.value);
 
-  // Persist selections by port name (IDs can change between sessions)
   savePortSelections(actionsSelect, feedbackSelect, outputSelect);
+  updateConnectButton();
 
-  // Remember what we connected to
-  connectedPorts.actions = actionsSelect.value;
-  connectedPorts.feedback = feedbackSelect.value;
-  connectedPorts.output = outputSelect.value;
-
-  const btn = document.getElementById('btn-connect');
-  const anyConnected = actionsSelect.value || feedbackSelect.value || outputSelect.value;
-  btn.textContent = anyConnected ? 'Connected' : 'Connect';
-  btn.classList.toggle('connected', anyConnected);
-
-  // Request full LED state dump from host
   sendReturnFromHost();
 
   const getName = (sel) => sel.value ? sel.selectedOptions[0]?.textContent : 'None';
   showStatus(`Connected — Actions: ${getName(actionsSelect)}, Feedback: ${getName(feedbackSelect)}, Out: ${getName(outputSelect)}`);
 }
 
-function onPortSelectionChange() {
+function doDisconnect() {
+  connectActions('');
+  connectFeedback('');
+  connectOutput('');
+  updateConnectButton();
+  showStatus('Disconnected.');
+}
+
+function updateConnectButton() {
   const btn = document.getElementById('btn-connect');
-  if (!btn.classList.contains('connected')) return;
-  const changed =
-    document.getElementById('midi-actions').value !== connectedPorts.actions ||
-    document.getElementById('midi-feedback').value !== connectedPorts.feedback ||
-    document.getElementById('midi-output').value !== connectedPorts.output;
-  btn.textContent = changed ? 'Reconnect' : 'Connected';
+  btn.textContent = wantConnected ? 'Connected' : 'Connect';
+  btn.classList.toggle('connected', wantConnected);
 }
 
 function savePortSelections(actionsSelect, feedbackSelect, outputSelect) {
@@ -342,6 +362,40 @@ function initResize() {
       document.addEventListener('touchend', onEnd);
     }
   });
+}
+
+// ─── Footswitch ───
+
+function initFootswitch() {
+  const group = document.querySelector('.fsw-group');
+  if (!group) return;
+  const tab = group.querySelector('.fsw-tab');
+  const indicators = group.querySelector('.fsw-indicators');
+
+  // Restore saved state (default: active/visible)
+  const saved = localStorage.getItem('jamulator-fsw-active');
+  const active = saved !== 'false';
+  group.classList.toggle('fsw-active', active);
+  if (indicators) indicators.hidden = !active;
+
+  tab.addEventListener('click', () => {
+    const nowActive = group.classList.toggle('fsw-active');
+    if (indicators) indicators.hidden = !nowActive;
+    localStorage.setItem('jamulator-fsw-active', nowActive);
+  });
+}
+
+function updateFootswitchVisibility(mapping) {
+  const hasFootswitch = mapping.outputMap.has('FswTip') || mapping.outputMap.has('FswRing');
+  const group = document.querySelector('.fsw-group');
+  if (group) {
+    group.hidden = !hasFootswitch;
+    if (!hasFootswitch) {
+      group.classList.remove('fsw-active');
+      const indicators = group.querySelector('.fsw-indicators');
+      if (indicators) indicators.hidden = true;
+    }
+  }
 }
 
 // ─── Utilities ───

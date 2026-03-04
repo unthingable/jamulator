@@ -108,6 +108,20 @@ const LEVEL_METERS = [
 ];
 
 /**
+ * Add a controlId to the inputMap, supporting multiple controls per key.
+ * If the key already exists, the value becomes an array.
+ */
+export function addInput(inputMap, key, controlId) {
+  const existing = inputMap.get(key);
+  if (existing) {
+    inputMap.set(key, Array.isArray(existing)
+      ? [...existing, controlId] : [existing, controlId]);
+  } else {
+    inputMap.set(key, controlId);
+  }
+}
+
+/**
  * Build the complete mapping object with lookup tables.
  */
 export function buildDefaultMapping() {
@@ -121,7 +135,7 @@ export function buildDefaultMapping() {
   for (const btn of CC_BUTTONS) {
     const def = { type: 'cc', channel: 0, number: btn.cc, controlId: btn.controlId, label: btn.label };
     outputMap.set(btn.controlId, def);
-    inputMap.set(`cc:0:${btn.cc}`, btn.controlId);
+    addInput(inputMap, `cc:0:${btn.cc}`, btn.controlId);
   }
 
   // Note buttons on channel 1 (output)
@@ -129,19 +143,19 @@ export function buildDefaultMapping() {
     const def = { type: 'note', channel: 1, number: btn.note, controlId: btn.controlId, label: btn.label };
     outputMap.set(btn.controlId, def);
     // Input from hardware: note on channel 1 (button press)
-    inputMap.set(`note:1:${btn.note}`, btn.controlId);
+    addInput(inputMap, `note:1:${btn.note}`, btn.controlId);
   }
 
   // Scene/Group LED entries on channel 0 (for incoming LED color commands)
   for (const led of NOTE_CH1_LED_ENTRIES) {
-    inputMap.set(`note:0:${led.note}`, led.controlId);
+    addInput(inputMap, `note:0:${led.note}`, led.controlId);
   }
 
   // Matrix buttons (channel 0, note on/off)
   for (const btn of MATRIX_BUTTONS) {
     const def = { type: 'note', channel: 0, number: btn.note, controlId: btn.controlId, label: btn.label };
     outputMap.set(btn.controlId, def);
-    inputMap.set(`note:0:${btn.note}`, btn.controlId);
+    addInput(inputMap, `note:0:${btn.note}`, btn.controlId);
   }
 
   // Touch strips
@@ -152,15 +166,16 @@ export function buildDefaultMapping() {
       number: strip.cc,
       controlId: strip.controlId,
       label: strip.label,
+      touchCc: strip.touchCc,
       aftertouchNote: strip.aftertouchNote,
     });
-    inputMap.set(`cc:0:${strip.cc}`, strip.controlId);
-    inputMap.set(`aftertouch:0:${strip.aftertouchNote}`, strip.controlId);
+    addInput(inputMap, `cc:0:${strip.cc}`, strip.controlId);
+    addInput(inputMap, `aftertouch:0:${strip.aftertouchNote}`, strip.controlId);
   }
 
   // Level meters
   for (const meter of LEVEL_METERS) {
-    inputMap.set(`cc:0:${meter.cc}`, meter.controlId);
+    addInput(inputMap, `cc:0:${meter.cc}`, meter.controlId);
   }
 
   return { outputMap, inputMap };

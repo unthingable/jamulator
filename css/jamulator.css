@@ -16,6 +16,7 @@
   --btn-font-size: 6px;
   --left-col-w: 38px;
   --right-col-w: 38px;
+  --press-glow: #e08030;
 }
 
 * {
@@ -186,7 +187,7 @@ body {
 .jam-btn {
   width: var(--btn-size);
   height: var(--btn-size);
-  background: linear-gradient(to bottom, #6a6662, #615d59);
+  background: radial-gradient(circle at 50% 40%, #a29b95, #7c7772);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 8px rgb(var(--btn-tint, 255 255 255)/0.07), 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 4px rgb(var(--btn-tint, 255 255 255)/0.04);
   border-radius: 1px;
   color: #1a1a1a;
@@ -212,8 +213,6 @@ body {
 }
 .jam-btn:active, .jam-btn.pressed {
   background: linear-gradient(to bottom, #a5a19d, #aeaaa6);
-  outline: 2px solid #fff;
-  outline-offset: -2px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   transform: scale(0.95);
 }
@@ -223,13 +222,11 @@ body {
 .jam-btn.lit {
   z-index: 1;
   background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3), transparent 90%), color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), #d0ccc8);
-  box-shadow: 0 0 4px color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 70%), transparent);
+  box-shadow: 0 0 3px color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 40%), transparent);
   color: #111;
 }
 .jam-btn.lit.pressed {
-  box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent), 0 0 4px #fff;
-  outline: 2px solid #fff;
-  outline-offset: -2px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent);
 }
 .jam-btn.lit {
   /* RGB caps: dark translucent — mix LED with dark base to preserve hue saturation */
@@ -292,7 +289,6 @@ body {
   color: transparent;
   background: linear-gradient(to bottom, #7e7a76, #858178);
   transform: scale(0.95);
-  outline: none;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 .jam-btn.inverted {
@@ -304,9 +300,12 @@ body {
   box-shadow: 0 0 8px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 60%), transparent);
 }
 .jam-btn.inverted.lit.pressed {
-  box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent), 0 0 4px #fff;
-  outline: 2px solid #fff;
-  outline-offset: -2px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent);
+}
+
+/* Press glow pulse — applied globally to all pressed controls */
+.pressed {
+  animation: press-pulse 1.5s ease-in-out infinite;
 }
 
 /* Colored LED buttons: tinted off-state backlight */
@@ -425,14 +424,14 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #505050, #353535 60%, #282828);
+  background: radial-gradient(circle, #3e3e3e 50%, #4a4a4a 56%, #3c3c3c 70%, #333);
   border: 2px solid #505050;
   cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.4);
   overflow: visible;
 }
 .encoder::after {
@@ -448,10 +447,13 @@ body {
   transition: transform 0.1s;
 }
 .encoder.pressed {
-  background: radial-gradient(circle at 40% 35%, #15eeca, #168181 60%, #333);
-  border-color: #fff;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle, #3a3a3a 50%, #484848 56%, #3c3c3c 70%, #333);
+  border-color: #555;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7);
   transform: scale(0.96);
+}
+.encoder.pressed::after {
+  background: #ccc;
 }
 .encoder.touched {
   border-color: var(--accent);
@@ -515,6 +517,14 @@ body {
   }
   100% {
     opacity: 0;
+  }
+}
+@keyframes press-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px var(--press-glow));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--press-glow));
   }
 }
 /* Turn counters */
@@ -672,9 +682,9 @@ body {
   display: flex;
   gap: 19px;
   align-items: flex-end;
-  height: 80px;
+  height: 73px;
   padding: 0 2px;
-  padding-top: 10px;
+  padding-top: 0px;
 }
 
 .level-bar {
@@ -693,7 +703,6 @@ body {
 }
 .level-bar .seg.lit {
   background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25), transparent 70%), #ddd;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(255, 255, 255, 0.3);
 }
 .level-bar .seg {
   /* Top segment (first child) is red when lit */
@@ -731,6 +740,90 @@ body {
     opacity: 0;
   }
 }
+/* ═══════════════════════════════════════════════
+   Controller Wrap + Footswitch
+   ═══════════════════════════════════════════════ */
+.controller-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.fsw-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.fsw-tab {
+  background: #193125;
+  /* color: #666; */
+  font-size: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 14px 2px;
+  cursor: pointer;
+  padding-bottom: 2px;
+  transform: translateY(calc(-100% - 15px + 0px));
+  margin-bottom: -22px;
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  color: #828282;
+}
+.fsw-tab:hover {
+  color: #999;
+}
+.fsw-active .fsw-tab {
+  background: var(--bg-controller);
+}
+
+.fsw-indicators {
+  display: flex;
+}
+.fsw-indicators[hidden] {
+  display: none;
+}
+.fsw-indicators {
+  width: 100%;
+  padding: 0;
+  font-size: 2px;
+}
+
+.footswitch {
+  flex: 1;
+  height: calc(var(--btn-h-sm) / 1.3);
+  border-radius: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.4);
+  color: #888;
+  font-size: 5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.footswitch:hover {
+  background: radial-gradient(circle at 50% 40%, #5a5a5a, #4a4a4a);
+  color: #bbb;
+}
+.footswitch {
+  /* Ignore LED feedback — footswitches are input-only (GATE) */
+}
+.footswitch.lit {
+  background: radial-gradient(circle at 50% 40%, #4a4a4a, #3a3a3a);
+  color: #888;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.footswitch.pressed {
+  background: radial-gradient(circle at 50% 40%, #aaa, #999);
+  color: #222;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: press-pulse 1.5s ease-in-out infinite;
+}
+
 /* ═══════════════════════════════════════════════
    Toolbar
    ═══════════════════════════════════════════════ */
@@ -808,7 +901,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding-left: 1px;
+  padding-left: 7px;
 }
 
 #btn-connect {
@@ -818,6 +911,20 @@ body {
 #btn-connect.connected {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, #333);
+}
+
+.connect-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+kbd.hint {
+  color: #555;
+  font-size: 9px;
+  font-family: inherit;
 }
 
 .mapping-btn {

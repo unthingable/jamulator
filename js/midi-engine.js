@@ -139,6 +139,13 @@ export function sendReturnFromHost() {
   send(buildSysEx(0x46, [0x01]));
 }
 
+// Resolve inputMap value to an array of controlIds (supports string | string[])
+function resolveIds(mapping, key) {
+  const raw = mapping.inputMap.get(key);
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw];
+}
+
 // Internal: handle incoming MIDI messages
 // source: 'actions' (physical button presses) or 'feedback' (LED data from DAW)
 function onMidiMessage(event, source) {
@@ -161,8 +168,7 @@ function onMidiMessage(event, source) {
     case 0x90: { // Note On
       const note = data[1];
       const velocity = data[2];
-      const controlId = currentMapping.inputMap.get(`note:${channel}:${note}`);
-      if (controlId) {
+      for (const controlId of resolveIds(currentMapping, `note:${channel}:${note}`)) {
         if (source === 'feedback') {
           // LED color update: velocity = color value
           state.setLedColor(controlId, velocity);
@@ -175,8 +181,7 @@ function onMidiMessage(event, source) {
     }
     case 0x80: { // Note Off
       const note = data[1];
-      const controlId = currentMapping.inputMap.get(`note:${channel}:${note}`);
-      if (controlId) {
+      for (const controlId of resolveIds(currentMapping, `note:${channel}:${note}`)) {
         if (source === 'feedback') {
           state.setLedColor(controlId, 0);
         } else {
@@ -196,8 +201,7 @@ function onMidiMessage(event, source) {
         break;
       }
 
-      const controlId = currentMapping.inputMap.get(`cc:${channel}:${cc}`);
-      if (controlId) {
+      for (const controlId of resolveIds(currentMapping, `cc:${channel}:${cc}`)) {
         if (controlId.startsWith('Tst')) {
           if (source === 'feedback') {
             state.setStripValue(controlId, value);
@@ -219,6 +223,7 @@ function onMidiMessage(event, source) {
           state.setLevel('R', value);
         } else {
           if (source === 'feedback') {
+            if (controlId.startsWith('Fsw')) break; // footswitches have no LED
             // LED update from DAW — CC buttons have fixed backlight colors
             const base = FIXED_BUTTON_COLORS[controlId] ?? 68; // default white
             state.setLedColor(controlId, value > 0 ? base + 3 : 0);
@@ -233,8 +238,7 @@ function onMidiMessage(event, source) {
     case 0xA0: { // Polyphonic Aftertouch
       const note = data[1];
       const pressure = data[2];
-      const controlId = currentMapping.inputMap.get(`aftertouch:${channel}:${note}`);
-      if (controlId) {
+      for (const controlId of resolveIds(currentMapping, `aftertouch:${channel}:${note}`)) {
         state.setStripTouched(controlId, pressure > 0);
       }
       break;

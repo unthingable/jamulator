@@ -43,8 +43,8 @@ export function initEncoder() {
   // Scroll = turn (relative 2's complement: CW = 1, CCW = 127-x)
   el.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // deltaY < 0 = scroll up = CW, deltaY > 0 = scroll down = CCW
-    const direction = e.deltaY < 0 ? 1 : -1;
+    // deltaY > 0 = scroll down = CW, deltaY < 0 = scroll up = CCW
+    const direction = e.deltaY > 0 ? 1 : -1;
     // Speed: larger scroll = bigger increment
     const magnitude = Math.min(Math.abs(e.deltaY) > 50 ? 4 : 1, 63);
     const value = direction > 0 ? magnitude : 128 - magnitude;

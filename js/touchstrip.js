@@ -55,8 +55,12 @@ function onStripStart(el, controlId, e) {
   const def = currentMapping.outputMap.get(controlId);
   if (!def) return;
 
-  // Send aftertouch (touch sensor)
-  sendAftertouch(def.channel, def.aftertouchNote, 127);
+  // Send touch sensor (CC or aftertouch depending on mapping)
+  if (def.touchCc != null) {
+    sendCC(def.channel, def.touchCc, 127);
+  } else {
+    sendAftertouch(def.channel, def.aftertouchNote, 127);
+  }
   state.setStripTouched(controlId, true);
 
   // Send initial value
@@ -80,6 +84,10 @@ function onStripEnd(el, controlId) {
   const def = currentMapping.outputMap.get(controlId);
   if (!def) return;
 
-  sendAftertouch(def.channel, def.aftertouchNote, 0);
+  if (def.touchCc != null) {
+    sendCC(def.channel, def.touchCc, 0);
+  } else {
+    sendAftertouch(def.channel, def.aftertouchNote, 0);
+  }
   state.setStripTouched(controlId, false);
 }
