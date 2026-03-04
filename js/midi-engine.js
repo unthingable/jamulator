@@ -4,7 +4,8 @@ import { state } from './state.js';
 import { parseSysEx, parseStripLeds, parseStripValues, parseShift } from './sysex.js';
 
 let midiAccess = null;
-let inputPort = null;
+let actionsPort = null;
+let feedbackPort = null;
 let outputPort = null;
 let currentMapping = null;
 
@@ -45,18 +46,33 @@ export function setMapping(mapping) {
 }
 
 /**
- * Connect to an input port by ID.
+ * Connect to the actions input port (physical Jam button presses).
  */
-export function connectInput(portId) {
-  if (inputPort) {
-    inputPort.onmidimessage = null;
-    inputPort = null;
+export function connectActions(portId) {
+  if (actionsPort) {
+    actionsPort.onmidimessage = null;
+    actionsPort = null;
   }
   if (!portId || !midiAccess) return;
   const port = midiAccess.inputs.get(portId);
   if (!port) return;
-  inputPort = port;
-  inputPort.onmidimessage = onMidiMessage;
+  actionsPort = port;
+  actionsPort.onmidimessage = onMidiMessage;
+}
+
+/**
+ * Connect to the feedback input port (LED data from Bitwig).
+ */
+export function connectFeedback(portId) {
+  if (feedbackPort) {
+    feedbackPort.onmidimessage = null;
+    feedbackPort = null;
+  }
+  if (!portId || !midiAccess) return;
+  const port = midiAccess.inputs.get(portId);
+  if (!port) return;
+  feedbackPort = port;
+  feedbackPort.onmidimessage = onMidiMessage;
 }
 
 /**

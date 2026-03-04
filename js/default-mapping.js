@@ -165,4 +165,3 @@ export function buildDefaultMapping() {
   return { outputMap, inputMap };
 }
 
-export { CC_BUTTONS, NOTE_CH1_BUTTONS, MATRIX_BUTTONS, TOUCH_STRIPS, STRIP_LETTERS, ROW_LETTERS };

@@ -1,5 +1,20 @@
-// .ncmj XML parser — modeled on XmlMap.scala
-// Parses Native Instruments controller mapping files
+// .ncmj XML parser
+// Handles Native Instruments controller mapping files in two formats:
+// 1. Native NI format: <button>/<knob>/<wheel>/<led> with child elements
+// 2. Template format: <Template><Entry> with attributes
+
+// ID renames: ncmj internal names → Jamulator controlIds
+const ID_RENAMES = {
+  'CapBrowse': 'EncTouch',
+  'EncBrowse': 'EncTurn',
+  'MetLevel1': 'LevelL',
+  'MetLevel2': 'LevelR',
+};
+
+// Controls not present in the ncmj file (SysEx-driven or implicit)
+const HARDCODED = [
+  { controlId: 'EncPush', type: 'cc', channel: 0, number: 87 },
+];
 
 /**
  * Parse an .ncmj XML string into a mapping.
@@ -11,9 +26,138 @@ export function parseNcmj(xmlString) {
   const doc = parser.parseFromString(xmlString, 'text/xml');
   const outputMap = new Map();
   const inputMap = new Map();
-  const aftertouches = []; // Collect aftertouch entries for second pass
 
-  // Pass 1: Process all non-aftertouch entries (CC, Note)
+  // Try native NI format first (has <controls>, <scenePages>, etc.)
+  if (doc.querySelector('ni-controller-midi-map')) {
+    parseNativeFormat(doc, outputMap, inputMap);
+  }
+
+  // Fall back to Template > Entry attribute format
+  if (outputMap.size === 0) {
+    parseTemplateFormat(doc, outputMap, inputMap);
+  }
+
+  return { outputMap, inputMap };
+}
+
+/**
+ * Parse native NI .ncmj format.
+ * Elements: <button>, <knob>, <wheel> (interactive), <led> (input-only feedback).
+ * MIDI info stored in child elements: <controller>, <note>, <polyat>, <channel>.
+ */
+function parseNativeFormat(doc, outputMap, inputMap) {
+  const aftertouches = []; // polyat entries deferred to pass 2
+
+  // Pass 1: all <button>, <knob>, <wheel> elements (first occurrence wins)
+  for (const el of doc.querySelectorAll('button, knob, wheel')) {
+    const rawId = el.getAttribute('id');
+    if (!rawId) continue;
+
+    const channel = intChild(el, 'channel', 0);
+    const ccEl = el.querySelector('controller');
+    const noteEl = el.querySelector('note');
+    const polyatEl = el.querySelector('polyat');
+
+    let midiType, number;
+
+    if (polyatEl) {
+      // Aftertouch cap sensor — defer to pass 2
+      number = parseInt(polyatEl.textContent, 10);
+      aftertouches.push({ rawId, channel, number });
+      continue;
+    } else if (noteEl) {
+      midiType = 'note';
+      number = parseInt(noteEl.textContent, 10);
+    } else if (ccEl) {
+      midiType = 'cc';
+      number = parseInt(ccEl.textContent, 10);
+    } else {
+      continue;
+    }
+
+    const controlId = normalizeId(rawId);
+    if (outputMap.has(controlId)) continue; // first occurrence wins (pages have duplicates)
+
+    const def = { type: midiType, channel, number, controlId, label: rawId };
+    outputMap.set(controlId, def);
+    inputMap.set(`${midiType}:${channel}:${number}`, controlId);
+  }
+
+  // Pass 2: link aftertouch entries to their strip control
+  const seenAftertouch = new Set();
+  for (const { rawId, channel, number } of aftertouches) {
+    const key = `${rawId}:${channel}:${number}`;
+    if (seenAftertouch.has(key)) continue; // skip duplicates across pages
+    seenAftertouch.add(key);
+
+    // CapTstA → try TstA, CapBrowse → try Browse
+    const strippedId = rawId.replace(/^Cap/, '');
+    const targetId = normalizeId(strippedId);
+    const targetDef = outputMap.get(targetId);
+    if (targetDef) {
+      targetDef.aftertouchNote = number;
+      inputMap.set(`aftertouch:${channel}:${number}`, targetId);
+    } else {
+      // Standalone aftertouch — use normalized ID
+      const controlId = normalizeId(rawId);
+      inputMap.set(`aftertouch:${channel}:${number}`, controlId);
+    }
+  }
+
+  // Pass 3: <led> elements — input-only feedback mappings
+  for (const el of doc.querySelectorAll('led')) {
+    const rawId = el.getAttribute('id');
+    if (!rawId) continue;
+
+    // Strip "IDX" suffix: BtnGroupAIDX → BtnGroupA
+    const controlId = rawId.replace(/IDX$/, '');
+    if (!outputMap.has(controlId)) continue; // only add LED input for known controls
+
+    const channel = intChild(el, 'channel', 0);
+    const ccEl = el.querySelector('controller');
+    const noteEl = el.querySelector('note');
+
+    let midiType, number;
+    if (noteEl) {
+      midiType = 'note';
+      number = parseInt(noteEl.textContent, 10);
+    } else if (ccEl) {
+      midiType = 'cc';
+      number = parseInt(ccEl.textContent, 10);
+    } else {
+      continue;
+    }
+
+    const key = `${midiType}:${channel}:${number}`;
+    if (!inputMap.has(key)) {
+      inputMap.set(key, controlId);
+    }
+  }
+
+  // Add hardcoded entries not present in the file
+  for (const h of HARDCODED) {
+    if (!outputMap.has(h.controlId)) {
+      outputMap.set(h.controlId, { ...h, label: h.controlId });
+      inputMap.set(`${h.type}:${h.channel}:${h.number}`, h.controlId);
+    }
+  }
+}
+
+function normalizeId(rawId) {
+  return ID_RENAMES[rawId] || rawId;
+}
+
+function intChild(el, tagName, fallback) {
+  const child = el.querySelector(tagName);
+  return child ? parseInt(child.textContent, 10) : fallback;
+}
+
+/**
+ * Parse Template > Entry attribute-based format.
+ */
+function parseTemplateFormat(doc, outputMap, inputMap) {
+  const aftertouches = [];
+
   const templates = doc.querySelectorAll('Template > Entry');
   for (const entry of templates) {
     const idAttr = entry.getAttribute('ID');
@@ -24,7 +168,6 @@ export function parseNcmj(xmlString) {
     const channel = parseInt(entry.getAttribute('Channel') || '0', 10);
     const number = parseInt(entry.getAttribute('Number') || '0', 10);
 
-    // Determine MIDI type from the Type attribute
     let midiType;
     if (type === 'CC' || type === 'ControlChange') {
       midiType = 'cc';
@@ -32,50 +175,34 @@ export function parseNcmj(xmlString) {
       midiType = 'note';
     } else if (type === 'Aftertouch' || type === 'PolyAT') {
       midiType = 'aftertouch';
-      // Save for second pass
       const controlId = section ? `${section}${idAttr}` : idAttr;
       aftertouches.push({ controlId, channel, number });
-      continue; // Skip aftertouch in first pass
+      continue;
     } else {
       continue;
     }
 
-    // Build control ID from Section + ID
     const controlId = section ? `${section}${idAttr}` : idAttr;
-
-    const def = {
-      type: midiType,
-      channel,
-      number,
-      controlId,
-      label: idAttr,
-    };
-
+    const def = { type: midiType, channel, number, controlId, label: idAttr };
     outputMap.set(controlId, def);
     inputMap.set(`${midiType}:${channel}:${number}`, controlId);
   }
 
-  // Pass 2: Process aftertouch entries — now all CC/Note entries are already in outputMap
   for (const { controlId, channel, number } of aftertouches) {
     inputMap.set(`aftertouch:${channel}:${number}`, controlId);
-    // Patch aftertouchNote on the control's definition
     const stripDef = outputMap.get(controlId);
     if (stripDef) {
       stripDef.aftertouchNote = number;
     }
   }
 
-  // If parsing found entries from the "correct" XML structure, also look for
-  // the simpler flat format used by some .ncmj files
+  // Try flat format if Template format found nothing
   if (outputMap.size === 0) {
     parseFlatFormat(doc, outputMap, inputMap);
   }
-
-  return { outputMap, inputMap };
 }
 
 function parseFlatFormat(doc, outputMap, inputMap) {
-  // Try alternative XML structures
   const entries = doc.querySelectorAll('Entry, entry, Control, control');
   for (const entry of entries) {
     const id = entry.getAttribute('ID') || entry.getAttribute('id') ||
