@@ -1,13 +1,22 @@
 // Web MIDI API: port enumeration, connect, send/receive, SysEx routing
 
 import { state } from './state.js';
-import { parseSysEx, parseStripLeds, parseStripValues, parseShift } from './sysex.js';
+import { parseSysEx, parseStripLeds, parseStripValues, parseShift, buildSysEx } from './sysex.js';
 
 let midiAccess = null;
 let actionsPort = null;
 let feedbackPort = null;
 let outputPort = null;
 let currentMapping = null;
+
+// Fixed backlight colors for non-RGB buttons (color table base values)
+// RGB buttons (matrix, scene, group) get their color from the MIDI value.
+const FIXED_BUTTON_COLORS = {
+  BtnIn1: 44,     // Blue
+  BtnPlay: 28,    // Green
+  BtnRecord: 4,   // Red
+  // All other fixed buttons default to White (68)
+};
 
 /**
  * Request MIDI access with SysEx support.
@@ -57,7 +66,7 @@ export function connectActions(portId) {
   const port = midiAccess.inputs.get(portId);
   if (!port) return;
   actionsPort = port;
-  actionsPort.onmidimessage = onMidiMessage;
+  actionsPort.onmidimessage = (event) => onMidiMessage(event, 'actions');
 }
 
 /**
@@ -72,7 +81,7 @@ export function connectFeedback(portId) {
   const port = midiAccess.inputs.get(portId);
   if (!port) return;
   feedbackPort = port;
-  feedbackPort.onmidimessage = onMidiMessage;
+  feedbackPort.onmidimessage = (event) => onMidiMessage(event, 'feedback');
 }
 
 /**
@@ -123,8 +132,16 @@ export function sendAftertouch(channel, note, pressure) {
   send([0xA0 | (channel & 0x0F), note, pressure]);
 }
 
+/**
+ * Send ReturnFromHost SysEx to request a full LED state dump.
+ */
+export function sendReturnFromHost() {
+  send(buildSysEx(0x46, [0x01]));
+}
+
 // Internal: handle incoming MIDI messages
-function onMidiMessage(event) {
+// source: 'actions' (physical button presses) or 'feedback' (LED data from DAW)
+function onMidiMessage(event, source) {
   const data = event.data;
   if (!data || data.length === 0) return;
 
@@ -144,15 +161,14 @@ function onMidiMessage(event) {
     case 0x90: { // Note On
       const note = data[1];
       const velocity = data[2];
-      // Look up as LED command (channel 0 for matrix/scene/group LEDs)
-      const ledControlId = currentMapping.inputMap.get(`note:${channel}:${note}`);
-      if (ledControlId) {
-        if (channel === 0) {
+      const controlId = currentMapping.inputMap.get(`note:${channel}:${note}`);
+      if (controlId) {
+        if (source === 'feedback') {
           // LED color update: velocity = color value
-          state.setLedColor(ledControlId, velocity);
+          state.setLedColor(controlId, velocity);
         } else {
-          // Button press from hardware (channel 1 scene/group)
-          state.setPressed(ledControlId, velocity > 0);
+          // Button press from hardware
+          state.setPressed(controlId, velocity > 0);
         }
       }
       break;
@@ -161,11 +177,10 @@ function onMidiMessage(event) {
       const note = data[1];
       const controlId = currentMapping.inputMap.get(`note:${channel}:${note}`);
       if (controlId) {
-        if (channel === 1) {
-          state.setPressed(controlId, false);
-        } else {
-          // Note off on ch0 = LED off
+        if (source === 'feedback') {
           state.setLedColor(controlId, 0);
+        } else {
+          state.setPressed(controlId, false);
         }
       }
       break;
@@ -192,11 +207,14 @@ function onMidiMessage(event) {
         } else if (controlId === 'LevelR') {
           state.setLevel('R', value);
         } else {
-          // Button press/release from hardware (mirrors)
-          state.setPressed(controlId, value > 0);
-          // Also treat as LED for single-color buttons (on/off)
-          // Extension sends separate LED commands, but hardware press
-          // needs visual feedback too
+          if (source === 'feedback') {
+            // LED update from DAW — CC buttons have fixed backlight colors
+            const base = FIXED_BUTTON_COLORS[controlId] ?? 68; // default white
+            state.setLedColor(controlId, value > 0 ? base + 3 : 0);
+          } else {
+            // Button press/release from hardware
+            state.setPressed(controlId, value > 0);
+          }
         }
       }
       break;

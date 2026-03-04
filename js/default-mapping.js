@@ -75,12 +75,12 @@ const NOTE_CH1_LED_ENTRIES = NOTE_CH1_BUTTONS.map(b => ({
 }));
 
 // 8x8 Matrix: Notes on channel 0
-// note = 22 + rowIndex + (colIndex * 8), row A=0..H=7, col 1=0..8=7
+// note = 22 + colIndex + (rowIndex * 8), row A=0..H=7 (groups/columns), col 1=0..8=7 (scenes/rows)
 const MATRIX_BUTTONS = [];
 const ROW_LETTERS = ['A','B','C','D','E','F','G','H'];
 for (let col = 0; col < 8; col++) {
   for (let row = 0; row < 8; row++) {
-    const note = 22 + row + (col * 8);
+    const note = 22 + col + (row * 8);
     MATRIX_BUTTONS.push({
       controlId: `Btn${ROW_LETTERS[row]}${col + 1}`,
       note,

@@ -10,16 +10,22 @@
   <h1>Jamulator</h1>
 
   <div id="controller">
-    <div id="shift-overlay">SHIFT</div>
 
     <!-- ═══ UPPER ZONE: Scene + Matrix ═══ -->
 
     <div class="left-upper">
       <button class="jam-btn" data-control-id="BtnArrange">Song</button>
-      <button class="jam-btn" data-control-id="BtnStep">Step</button>
-      <button class="jam-btn" data-control-id="BtnPadMode">Pad<br>Mode</button>
+      <button class="jam-btn inverted" data-control-id="BtnStep">Step</button>
+      <button class="jam-btn inverted" data-control-id="BtnPadMode">Pad Mode</button>
       <button class="jam-btn" data-control-id="BtnClear">Clear</button>
-      <button class="jam-btn" data-control-id="BtnDuplicate">Dupli-<br>cate</button>
+      <button class="jam-btn" data-control-id="BtnDuplicate">Duplicate</button>
+      <div class="col-spacer" style="flex: 1; height: auto"></div>
+      <div class="dpad">
+        <button class="jam-btn" data-control-id="BtnDpad1">&#9650;</button>
+        <button class="jam-btn" data-control-id="BtnDpad4">&#9664;</button>
+        <button class="jam-btn" data-control-id="BtnDpad2">&#9654;</button>
+        <button class="jam-btn" data-control-id="BtnDpad3">&#9660;</button>
+      </div>
     </div>
 
     <div class="center-upper">
@@ -58,20 +64,16 @@
         <button class="jam-btn btn-half" data-control-id="BtnIn1">In1</button>
         <button class="jam-btn btn-half" data-control-id="BtnCue">Cue</button>
       </div>
+      <div class="encoder-space"></div>
       <div class="encoder-wrap">
         <div class="encoder" data-control-id="EncPush"></div>
       </div>
+      <div class="encoder-space"></div>
     </div>
 
     <!-- ═══ TRANSITION ZONE: D-pad / Group ═══ -->
 
     <div class="left-mid">
-      <div class="dpad">
-        <button class="jam-btn" data-control-id="BtnDpad1">&#9650;</button>
-        <button class="jam-btn" data-control-id="BtnDpad4">&#9664;</button>
-        <button class="jam-btn" data-control-id="BtnDpad2">&#9654;</button>
-        <button class="jam-btn" data-control-id="BtnDpad3">&#9660;</button>
-      </div>
       <button class="jam-btn" data-control-id="BtnArpRepeat">Note<br>Repeat</button>
     </div>
 
@@ -95,12 +97,12 @@
     <!-- ═══ LOWER ZONE: Touch Strips ═══ -->
 
     <div class="left-lower">
-      <button class="jam-btn" data-control-id="BtnMacro">Macro</button>
-      <button class="jam-btn" data-control-id="BtnLevel">Level</button>
-      <button class="jam-btn" data-control-id="BtnAux">Aux</button>
+      <button class="jam-btn inverted" data-control-id="BtnMacro">Macro</button>
+      <button class="jam-btn inverted" data-control-id="BtnLevel">Level</button>
+      <button class="jam-btn inverted" data-control-id="BtnAux">Aux</button>
       <div class="col-spacer"></div>
-      <button class="jam-btn" data-control-id="BtnControl">Control</button>
-      <button class="jam-btn" data-control-id="BtnAuto">Auto</button>
+      <button class="jam-btn inverted" data-control-id="BtnControl">Control</button>
+      <button class="jam-btn inverted" data-control-id="BtnAuto">Auto</button>
     </div>
 
     <div class="center-lower">
@@ -117,17 +119,17 @@
     </div>
 
     <div class="right-lower">
-      <button class="jam-btn" data-control-id="BtnPerform">Perform</button>
-      <button class="jam-btn" data-control-id="BtnVariation">Notes</button>
-      <button class="jam-btn" data-control-id="BtnLock">Lock</button>
+      <button class="jam-btn inverted" data-control-id="BtnPerform">Perform</button>
+      <button class="jam-btn inverted" data-control-id="BtnVariation">Notes</button>
+      <button class="jam-btn inverted" data-control-id="BtnLock">Lock</button>
       <div class="col-spacer"></div>
-      <button class="jam-btn" data-control-id="BtnTune">Tune</button>
-      <button class="jam-btn" data-control-id="BtnSwing">Swing</button>
+      <button class="jam-btn inverted" data-control-id="BtnTune">Tune</button>
+      <button class="jam-btn inverted" data-control-id="BtnSwing">Swing</button>
     </div>
 
     <!-- ═══ Bottom Row ═══ -->
     <div class="bottom-row">
-      <button class="jam-btn" data-control-id="BtnShift">Shift</button>
+      <button class="jam-btn inverted" data-control-id="BtnShift">Shift</button>
       <div class="bottom-spacer"></div>
       <button class="jam-btn" data-control-id="BtnPlay">Play</button>
       <button class="jam-btn" data-control-id="BtnRecord">Rec</button>

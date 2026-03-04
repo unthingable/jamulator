@@ -58,10 +58,6 @@ export function initLedRenderer() {
     el.classList.add(dir > 0 ? 'turn-cw' : 'turn-ccw');
   });
 
-  state.addEventListener('shift-change', (e) => {
-    const overlay = document.getElementById('shift-overlay');
-    if (overlay) overlay.classList.toggle('visible', e.detail.down);
-  });
 
   state.addEventListener('level-change', (e) => {
     const { channel, value } = e.detail;

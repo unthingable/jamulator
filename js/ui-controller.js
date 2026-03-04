@@ -1,6 +1,7 @@
 // DOM events → MIDI output (button press/release)
 
-import { sendCC, sendNoteOn, sendNoteOff, sendAftertouch } from './midi-engine.js';
+import { sendCC, sendNoteOn, sendNoteOff, sendAftertouch, send } from './midi-engine.js';
+import { buildSysEx } from './sysex.js';
 import { state } from './state.js';
 
 let currentMapping = null;
@@ -50,6 +51,14 @@ function bindButtons() {
 }
 
 function onPress(controlId, pressed) {
+  // Shift uses SysEx, not CC/Note
+  if (controlId === 'BtnShift') {
+    state.setPressed(controlId, pressed);
+    state.setShift(pressed);
+    send(buildSysEx(0x4D, [pressed ? 0x01 : 0x00]));
+    return;
+  }
+
   if (!currentMapping) return;
   const def = currentMapping.outputMap.get(controlId);
   if (!def) return;

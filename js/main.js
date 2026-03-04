@@ -1,15 +1,17 @@
 // Entry point — wires all modules together
 
-import { requestMidiAccess, getInputPorts, getOutputPorts, connectActions, connectFeedback, connectOutput, setMapping } from './midi-engine.js';
+import { requestMidiAccess, getInputPorts, getOutputPorts, connectActions, connectFeedback, connectOutput, setMapping, sendReturnFromHost } from './midi-engine.js';
 import { buildDefaultMapping } from './default-mapping.js';
 import { initLedRenderer } from './led-renderer.js';
 import { initUiController, updateMapping as updateUiMapping } from './ui-controller.js';
 import { initTouchStrips, updateMapping as updateStripMapping } from './touchstrip.js';
 import { initEncoder } from './encoder.js';
+import { initEncoderDisplay } from './encoder-display.js';
 import { parseNcmj } from './xml-parser.js';
 
 let currentMapping = null;
 let currentMappingName = null;
+const connectedPorts = { actions: '', feedback: '', output: '' };
 
 const PORT_STORAGE_KEY = 'jamulator-midi-ports';
 const MAPPING_STORAGE_KEY = 'jamulator-mapping';
@@ -47,9 +49,24 @@ async function init() {
   initUiController(currentMapping);
   initTouchStrips(currentMapping);
   initEncoder();
+  initEncoderDisplay();
 
   // Connect button
-  document.getElementById('btn-connect').addEventListener('click', onConnect);
+  const btnConnect = document.getElementById('btn-connect');
+  btnConnect.addEventListener('click', onConnect);
+
+  // Port change → show "Reconnect" when selections differ from connected ports
+  for (const id of ['midi-actions', 'midi-feedback', 'midi-output']) {
+    document.getElementById(id).addEventListener('change', onPortSelectionChange);
+  }
+
+  // Spacebar → press connect button (unless typing in an input)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && !e.target.matches('input, textarea, select')) {
+      e.preventDefault();
+      btnConnect.click();
+    }
+  });
 
   // File upload + mapping popover
   document.getElementById('file-ncmj').addEventListener('change', onFileUpload);
@@ -192,13 +209,31 @@ function onConnect() {
   // Persist selections by port name (IDs can change between sessions)
   savePortSelections(actionsSelect, feedbackSelect, outputSelect);
 
+  // Remember what we connected to
+  connectedPorts.actions = actionsSelect.value;
+  connectedPorts.feedback = feedbackSelect.value;
+  connectedPorts.output = outputSelect.value;
+
   const btn = document.getElementById('btn-connect');
   const anyConnected = actionsSelect.value || feedbackSelect.value || outputSelect.value;
   btn.textContent = anyConnected ? 'Connected' : 'Connect';
   btn.classList.toggle('connected', anyConnected);
 
+  // Request full LED state dump from host
+  sendReturnFromHost();
+
   const getName = (sel) => sel.value ? sel.selectedOptions[0]?.textContent : 'None';
   showStatus(`Connected — Actions: ${getName(actionsSelect)}, Feedback: ${getName(feedbackSelect)}, Out: ${getName(outputSelect)}`);
+}
+
+function onPortSelectionChange() {
+  const btn = document.getElementById('btn-connect');
+  if (!btn.classList.contains('connected')) return;
+  const changed =
+    document.getElementById('midi-actions').value !== connectedPorts.actions ||
+    document.getElementById('midi-feedback').value !== connectedPorts.feedback ||
+    document.getElementById('midi-output').value !== connectedPorts.output;
+  btn.textContent = changed ? 'Reconnect' : 'Connected';
 }
 
 function savePortSelections(actionsSelect, feedbackSelect, outputSelect) {
