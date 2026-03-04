@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jamulator — Maschine Jam Emulator</title>
+  <title>JAMulator</title>
   <link rel="stylesheet" href="css/jamulator.css">
 </head>
 <body>
@@ -157,6 +157,8 @@
   </div><!-- .controller-wrap -->
 
   <!-- ═══ Toolbar ═══ -->
+  <div class="conf-group conf-active">
+  <div class="conf-tab">CONF</div>
   <div id="toolbar">
     <div class="port-group">
       <label for="midi-actions">From Jam</label>
@@ -188,8 +190,10 @@
         <button id="btn-open-file" class="mapping-action">Open file…</button>
       </div>
     </div>
+    <button id="btn-zoom-mode" class="zoom-toggle active" title="Window zoom: resize window to scale">FIT</button>
     <input type="file" id="file-ncmj" accept=".ncmj,.xml">
   </div>
+  </div><!-- .conf-group -->
 
 
   <script type="module" src="js/main.js"></script>

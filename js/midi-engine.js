@@ -18,6 +18,8 @@ const FIXED_BUTTON_COLORS = {
   // All other fixed buttons default to White (68)
 };
 
+const STRIP_IDS = ['TstA','TstB','TstC','TstD','TstE','TstF','TstG','TstH'];
+
 /**
  * Request MIDI access with SysEx support.
  * @returns {Promise<MIDIAccess>}
@@ -196,7 +198,6 @@ function onMidiMessage(event, source) {
 
       // Strip touch CCs: 20-27 map to TstA-TstH (position CC + 12)
       if (channel === 0 && cc >= 20 && cc <= 27) {
-        const STRIP_IDS = ['TstA','TstB','TstC','TstD','TstE','TstF','TstG','TstH'];
         state.setStripTouched(STRIP_IDS[cc - 20], value > 0);
         break;
       }
@@ -223,7 +224,7 @@ function onMidiMessage(event, source) {
           state.setLevel('R', value);
         } else {
           if (source === 'feedback') {
-            if (controlId.startsWith('Fsw')) break; // footswitches have no LED
+            if (controlId.startsWith('Fsw')) continue; // footswitches have no LED
             // LED update from DAW — CC buttons have fixed backlight colors
             const base = FIXED_BUTTON_COLORS[controlId] ?? 68; // default white
             state.setLedColor(controlId, value > 0 ? base + 3 : 0);
@@ -249,8 +250,6 @@ function onMidiMessage(event, source) {
 function handleSysEx(data) {
   const parsed = parseSysEx(data);
   if (!parsed) return;
-
-  const STRIP_IDS = ['TstA','TstB','TstC','TstD','TstE','TstF','TstG','TstH'];
 
   switch (parsed.command) {
     case 0x05: {

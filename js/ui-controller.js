@@ -27,7 +27,7 @@ function bindButtons() {
     const controlId = el.dataset.controlId;
 
     // Skip strips (handled by touchstrip.js) and encoder turn
-    if (controlId.startsWith('Tst') || controlId === 'EncTurn') return;
+    if (controlId.startsWith('Tst') || controlId.startsWith('Enc')) return;
 
     el.addEventListener('pointerdown', (e) => {
       e.preventDefault();

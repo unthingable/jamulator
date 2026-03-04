@@ -20,6 +20,8 @@ const DEFAULT_NCMJ = 'mappings/ext.ncmj';
 let wantConnected = localStorage.getItem(INTENT_STORAGE_KEY) === 'true';
 
 async function init() {
+  // Conf tab (toolbar toggle) — before resize so zoom computes correct height
+  initConf();
   // Resize handles (init early — no async dependency)
   initResize();
 
@@ -71,11 +73,15 @@ async function init() {
     });
   }
 
-  // Spacebar → toggle connect (unless typing in an input)
+  // Keyboard shortcuts (unless typing in an input)
   document.addEventListener('keydown', (e) => {
-    if (e.key === ' ' && !e.target.matches('input, textarea, select')) {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.key === ' ') {
       e.preventDefault();
       btnConnect.click();
+    } else if (e.key === ',') {
+      e.preventDefault();
+      document.querySelector('.conf-tab')?.click();
     }
   });
 
@@ -254,6 +260,8 @@ function updateConnectButton() {
   const btn = document.getElementById('btn-connect');
   btn.textContent = wantConnected ? 'Connected' : 'Connect';
   btn.classList.toggle('connected', wantConnected);
+  const confGroup = document.querySelector('.conf-group');
+  if (confGroup) confGroup.classList.toggle('conf-connected', wantConnected);
 }
 
 function savePortSelections(actionsSelect, feedbackSelect, outputSelect) {
@@ -311,20 +319,71 @@ async function onFileUpload(e) {
 
 // ─── Resize ───
 
+const FSW_OVERHEAD = 12;   // px above controller at natural scale for FSW tab
+
 function initResize() {
   const controller = document.getElementById('controller');
+  const toolbar = document.getElementById('toolbar');
   const handles = controller.querySelectorAll('.resize-handle');
+  const toggleBtn = document.getElementById('btn-zoom-mode');
   let currentZoom = 1;
+  let zoomMode = localStorage.getItem('jamulator-zoom-mode') || 'window';
 
   // Clear stale key from old slider (stored percentages like "100")
   localStorage.removeItem('jamulator-zoom');
 
-  const saved = localStorage.getItem('jamulator-zoom-level');
-  if (saved) {
-    currentZoom = Math.max(0.5, Math.min(2, parseFloat(saved)));
+  function setZoom(value) {
+    currentZoom = Math.max(0.5, value);
     controller.style.zoom = currentZoom;
+    localStorage.setItem('jamulator-zoom-level', currentZoom);
+    if (zoomMode === 'window') {
+      document.body.style.paddingTop = (FSW_OVERHEAD * currentZoom) + 'px';
+    }
   }
 
+  function computeWindowZoom() {
+    const widthZoom = window.innerWidth / controller.scrollWidth;
+    const controllerNaturalHeight = controller.scrollHeight + FSW_OVERHEAD;
+    const nonZoomedHeight = toolbar.offsetHeight + 14; // toolbar + gap
+    const availableForController = window.innerHeight - nonZoomedHeight;
+    const heightZoom = availableForController / controllerNaturalHeight;
+    return Math.min(widthZoom, heightZoom);
+  }
+
+  function onWindowResize() {
+    if (zoomMode === 'window') setZoom(computeWindowZoom());
+  }
+
+  function applyMode() {
+    const isWindow = zoomMode === 'window';
+    document.body.classList.toggle('zoom-fit', isWindow);
+    if (!isWindow) document.body.style.paddingTop = '';
+    handles.forEach(h => h.hidden = isWindow);
+    toggleBtn.classList.toggle('active', isWindow);
+    toggleBtn.title = isWindow
+      ? 'Window zoom: resize window to scale'
+      : 'Manual zoom: drag corner handles to scale';
+    if (isWindow) setZoom(computeWindowZoom());
+  }
+
+  function toggleZoomMode() {
+    zoomMode = zoomMode === 'window' ? 'manual' : 'window';
+    localStorage.setItem('jamulator-zoom-mode', zoomMode);
+    applyMode();
+  }
+
+  // Restore saved zoom for manual mode, then apply current mode
+  const saved = localStorage.getItem('jamulator-zoom-level');
+  if (saved) {
+    currentZoom = Math.max(0.5, parseFloat(saved));
+    controller.style.zoom = currentZoom;
+  }
+  applyMode();
+
+  window.addEventListener('resize', onWindowResize);
+  toggleBtn.addEventListener('click', toggleZoomMode);
+
+  // Manual drag handles
   handles.forEach(handle => {
     const isRight = handle.classList.contains('resize-handle-r');
 
@@ -335,17 +394,13 @@ function initResize() {
       e.preventDefault();
       const startX = e.touches ? e.touches[0].clientX : e.clientX;
       const startZoom = currentZoom;
-      // Natural width is layout width (unaffected by zoom in most browsers)
       const naturalWidth = controller.offsetWidth / currentZoom;
       const sign = isRight ? 1 : -1;
 
       function onMove(e) {
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const dx = (clientX - startX) * sign;
-        // Multiply by 2 because controller is centered — dragging one side expands both
-        const newZoom = Math.max(0.5, Math.min(2, startZoom + (dx * 2) / naturalWidth));
-        currentZoom = newZoom;
-        controller.style.zoom = currentZoom;
+        setZoom(startZoom + (dx * 2) / naturalWidth);
       }
 
       function onEnd() {
@@ -353,7 +408,6 @@ function initResize() {
         document.removeEventListener('mouseup', onEnd);
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('touchend', onEnd);
-        localStorage.setItem('jamulator-zoom-level', currentZoom);
       }
 
       document.addEventListener('mousemove', onMove);
@@ -396,6 +450,29 @@ function updateFootswitchVisibility(mapping) {
       if (indicators) indicators.hidden = true;
     }
   }
+}
+
+// ─── CONF tab (toolbar toggle) ───
+
+function initConf() {
+  const group = document.querySelector('.conf-group');
+  if (!group) return;
+  const tab = group.querySelector('.conf-tab');
+  const toolbar = document.getElementById('toolbar');
+
+  // Restore saved state (default: active/visible)
+  const saved = localStorage.getItem('jamulator-conf-active');
+  const active = saved !== 'false';
+  group.classList.toggle('conf-active', active);
+  if (toolbar) toolbar.hidden = !active;
+
+  tab.addEventListener('click', () => {
+    const nowActive = group.classList.toggle('conf-active');
+    if (toolbar) toolbar.hidden = !nowActive;
+    localStorage.setItem('jamulator-conf-active', nowActive);
+    // Recalc zoom-fit after toolbar visibility change
+    window.dispatchEvent(new Event('resize'));
+  });
 }
 
 // ─── Utilities ───

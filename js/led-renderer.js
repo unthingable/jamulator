@@ -1,7 +1,7 @@
 // State changes → DOM visual updates (colors, brightness, press highlights)
 
 import { state } from './state.js';
-import { lookupColor, lookupBaseHex } from './colors.js';
+import { lookupColor } from './colors.js';
 import { STRIP_MODE } from './sysex.js';
 
 let initialized = false;
@@ -67,7 +67,6 @@ export function initLedRenderer() {
     el.classList.add(dir > 0 ? 'turn-cw' : 'turn-ccw');
   });
 
-
   state.addEventListener('level-change', (e) => {
     const { channel, value } = e.detail;
     const el = document.getElementById(`level-${channel.toLowerCase()}`);
@@ -103,18 +102,13 @@ function updatePress(controlId, pressed) {
 
   el.classList.toggle('pressed', pressed);
   if (pressed) {
-    spawnRipple(el, controlId);
+    spawnRipple(el);
   }
 }
 
-function spawnRipple(el, controlId) {
+function spawnRipple(el) {
   const ripple = document.createElement('div');
   ripple.className = 'ripple';
-
-  // Use the button's current LED color for the ripple, or white if unlit
-  const colorValue = state.getLedColor(controlId);
-  const color = colorValue > 0 ? lookupBaseHex(colorValue) : '#ffffff';
-  ripple.style.setProperty('--ripple-color', color);
 
   el.appendChild(ripple);
   ripple.addEventListener('animationend', () => ripple.remove());
@@ -179,11 +173,9 @@ function computeSegments(mode, value1, value2, colorHex, colorBrightness) {
     }
     case STRIP_MODE.DUAL: {
       // Colored bar fill from value1 (CC), white dot at value2 (SysEx 0x04)
-      if (value1 > 0) {
-        const barN = valueToSeg(value1);
-        for (let i = 0; i <= barN; i++) {
-          segs[i].lit = true;
-        }
+      const numLit = Math.round((value1 / 127) * 11);
+      for (let i = 0; i < numLit; i++) {
+        segs[i].lit = true;
       }
       const dotN = valueToSeg(value2);
       segs[dotN].dot = true;
