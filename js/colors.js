@@ -34,7 +34,10 @@ for (const { base, hex } of BASE_COLORS) {
     }
   } else {
     for (let b = 0; b < 4; b++) {
-      COLOR_TABLE.set(base + b, { hex, opacity: 0.25 + b * 0.25 });
+      // Brightness curve: raised floor, wider spread for visible dim levels
+      const BRIGHTNESS = [0.55, 0.72, 0.86, 1.0];
+    //   const BRIGHTNESS = [0.45, 0.63, 0.82, 1.0];
+      COLOR_TABLE.set(base + b, { hex, opacity: BRIGHTNESS[b] });
     }
   }
 }

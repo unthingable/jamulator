@@ -1,20 +1,21 @@
 @charset "UTF-8";
 /* Jamulator — Maschine Jam GUI Emulator */
 :root {
-  --bg-body: #0e0e0e;
-  --bg-controller: #1c1c1c;
+  --bg-body: #363535;
+  --bg-controller: #1f1f1f;
   --text-color: #ccc;
   --text-dim: #888;
   --accent: #00ccff;
-  --btn-size: 44px;
+  --btn-size: 34px;
   --strip-height: 110px;
-  --gap: 3px;
-  --section-gap: 10px;
-  --btn-h-sm: 18px;
-  --btn-h-lg: 26px;
-  --dpad-btn: 18px;
-  --left-col-w: 54px;
-  --right-col-w: 54px;
+  --gap: 7px;
+  --section-gap: 12px;
+  --btn-h-sm: 14px;
+  --btn-h-lg: 18px;
+  --dpad-btn: 14px;
+  --btn-font-size: 6px;
+  --left-col-w: 38px;
+  --right-col-w: 38px;
 }
 
 * {
@@ -27,7 +28,7 @@ body {
   background: var(--bg-body);
   color: var(--text-color);
   font-family: "Inter", "SF Pro", -apple-system, system-ui, sans-serif;
-  font-size: 11px;
+  font-size: 9px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,14 +46,14 @@ body {
    ═══════════════════════════════════════════════ */
 #controller {
   background: var(--bg-controller);
-  border-radius: 16px;
+  border-radius: 3px;
   padding: 14px;
-  box-shadow: 0 0 0 1px #282828, 0 8px 32px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 1px #282828, 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   display: grid;
   grid-template-columns: var(--left-col-w) 1fr var(--right-col-w);
   grid-template-rows: auto auto auto auto;
-  -moz-column-gap: 8px;
-       column-gap: 8px;
+  -moz-column-gap: 14px;
+       column-gap: 14px;
   row-gap: var(--section-gap);
   position: relative;
   max-width: 690px;
@@ -65,11 +66,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: var(--gap);
   /* Section break between SONG and STEP to align with scene→matrix gap */
 }
 .left-upper [data-control-id=BtnArrange] {
-  margin-bottom: calc(var(--section-gap) - 3px);
+  margin-bottom: calc(var(--section-gap) - var(--gap));
 }
 
 .center-upper {
@@ -87,7 +88,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 2px 0;
-  gap: 3px;
+  gap: var(--gap);
   overflow: visible;
 }
 
@@ -116,7 +117,6 @@ body {
 .right-mid .jam-btn {
   width: 100%;
   height: var(--btn-h-lg);
-  font-size: 7px;
   letter-spacing: 0;
 }
 
@@ -127,7 +127,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 3px;
+  gap: var(--gap);
   padding: 2px 0;
 }
 
@@ -143,7 +143,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 3px;
+  gap: var(--gap);
   padding: 2px 0;
 }
 
@@ -160,7 +160,6 @@ body {
   min-width: 0;
   height: var(--btn-h-lg);
   padding: 2px 4px;
-  font-size: 8px;
 }
 .bottom-row {
   /* Shift + Select match side column widths */
@@ -172,7 +171,7 @@ body {
 
 /* Spacer bridges the column-gap zone: parent col-gap(8px) - 2×flex-gap(3px) = 2px */
 .bottom-spacer {
-  flex: 0 0 2px;
+  flex: 0 0 0px;
 }
 
 /* ─── Column spacer ─── */
@@ -187,12 +186,13 @@ body {
 .jam-btn {
   width: var(--btn-size);
   height: var(--btn-size);
-  background: linear-gradient(to bottom, #9e9891, #837e79);
-  border: 2px solid;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 8px rgb(var(--btn-tint, 255 255 255)/0.07), 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 4px rgb(var(--btn-tint, 255 255 255)/0.04);
+  background: linear-gradient(to bottom, #6a6662, #615d59);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 8px rgb(var(--btn-tint, 255 255 255)/0.07), 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 4px rgb(var(--btn-tint, 255 255 255)/0.04);
+  border-radius: 1px;
   color: #1a1a1a;
-  font-size: 9px;
+  font-size: var(--btn-font-size);
   font-weight: 600;
+  font-stretch: condensed;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   display: flex;
@@ -201,7 +201,7 @@ body {
   cursor: pointer;
   position: relative;
   overflow: visible;
-  transition: background 0.05s, border-color 0.05s, box-shadow 0.05s;
+  transition: background 0.05s, box-shadow 0.05s, outline-color 0.05s;
   text-align: center;
   line-height: 1.1;
   padding: 2px;
@@ -212,7 +212,8 @@ body {
 }
 .jam-btn:active, .jam-btn.pressed {
   background: linear-gradient(to bottom, #a5a19d, #aeaaa6);
-  border-color: #fff;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   transform: scale(0.95);
 }
@@ -220,65 +221,35 @@ body {
   /* LED-lit: backlight through translucent silicon, text stays dark */
 }
 .jam-btn.lit {
-  background: color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), #d0ccc8);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 80%), transparent), 0 0 18px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 30%), transparent);
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3), transparent 90%), color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), #d0ccc8);
+  box-shadow: 0 0 4px color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 70%), transparent);
   color: #111;
 }
 .jam-btn.lit.pressed {
   box-shadow: 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent), 0 0 4px #fff;
-  border-color: #fff;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+.jam-btn.lit {
+  /* RGB caps: dark translucent — mix LED with dark base to preserve hue saturation */
+}
+.jam-btn.lit.btn-rgb {
+  background: radial-gradient(ellipse at center, color-mix(in srgb, white calc(var(--led-brightness, 0) * 30%), transparent), transparent 90%), color-mix(in oklch, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), #282624);
+  color: #111;
+}
+.jam-btn {
+  /* RGB buttons: darker translucent caps when unlit */
+}
+.jam-btn.btn-rgb:not(.lit) {
+  background: linear-gradient(to bottom, #383736, #383531);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.jam-btn.btn-rgb:not(.lit):hover {
+  background: linear-gradient(to bottom, #706c68, #5a5754);
 }
 .jam-btn {
   /* ─── Inverted buttons: black rectangle, cutout lettering ─── */
-}
-.jam-btn.inverted {
-  color: rgba(255, 255, 255, 0.5);
-  border: none;
-  padding: 4px; /* absorb base 2px border into padding — keeps box-model identical */
-  background: transparent;
-  box-shadow: none;
-  isolation: isolate;
-  /* Silicon underlay — fills entire element (padding edge = outer edge, no border gap) */
-}
-.jam-btn.inverted::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, #9e9891, #837e79);
-  z-index: -2;
-  pointer-events: none;
-}
-.jam-btn.inverted {
-  /* Dark display inset — sits on top of silicon rim */
-}
-.jam-btn.inverted::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  background: linear-gradient(to bottom, #2a2a2a, #1e1e1e);
-  border-radius: 1px;
-  z-index: -1;
-  pointer-events: none;
-}
-.jam-btn.inverted:hover {
-  color: rgba(255, 255, 255, 0.45);
-}
-.jam-btn.inverted:hover::before {
-  background: linear-gradient(to bottom, #333, #272727);
-}
-.jam-btn.inverted:active, .jam-btn.inverted.pressed {
-  color: rgba(255, 255, 255, 0.55);
-}
-.jam-btn.inverted {
-  /* Inverted lit: backlight through cutout text + silicon rim glows */
-}
-.jam-btn.inverted.lit {
-  color: color-mix(in srgb, var(--led-color, #fff) calc(var(--led-brightness, 0) * 100%), rgba(255, 255, 255, 0.15));
-  text-shadow: 0 0 6px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 60%), transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 80%), transparent), 0 0 18px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 30%), transparent);
-}
-.jam-btn.inverted.lit.pressed {
-  box-shadow: inset 0 0 0 2px #fff, 0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent), 0 0 4px #fff;
 }
 
 /* Colored LED buttons: tinted off-state backlight */
@@ -303,20 +274,18 @@ body {
 .scene-row, .group-row, .matrix-grid, .strips-row {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 3px;
+  gap: var(--gap);
   width: 100%;
 }
 
 .scene-row .jam-btn {
   width: 100%;
   height: var(--btn-h-sm);
-  font-size: 9px;
 }
 
 .group-row .jam-btn {
   width: 100%;
   height: var(--btn-h-lg);
-  font-size: 9px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -330,8 +299,7 @@ body {
   width: 100%;
   height: var(--btn-h-sm);
   font-size: 0;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-radius: 1px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -347,12 +315,10 @@ body {
 .dpad .jam-btn {
   width: 100%;
   height: 100%;
-  font-size: 8px;
   padding: 0;
   min-width: 0;
   background: linear-gradient(to bottom, #2e2e2e, #232323);
   color: #555;
-  border-color: #3a3a3a #303030 #1e1e1e #303030;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 .dpad .jam-btn:hover {
@@ -532,7 +498,7 @@ body {
    ═══════════════════════════════════════════════ */
 .right-pair-row {
   display: flex;
-  gap: 3px;
+  gap: var(--gap);
   width: 100%;
 }
 
@@ -540,7 +506,6 @@ body {
   flex: 1;
   min-width: 0;
   height: var(--btn-h-sm);
-  font-size: 7px;
   letter-spacing: 0;
 }
 
@@ -551,7 +516,6 @@ body {
 .right-lower .jam-btn {
   width: 100%;
   height: var(--btn-h-sm);
-  font-size: 7px;
   letter-spacing: 0;
   white-space: nowrap;
 }
@@ -643,7 +607,7 @@ body {
   display: flex;
   gap: 13px;
   align-items: flex-end;
-  height: 86px;
+  height: 80px;
   padding: 0 2px;
 }
 
@@ -873,8 +837,8 @@ body {
 .resize-handle {
   position: absolute;
   bottom: 0;
-  width: 24px;
-  height: 24px;
+  width: 12px;
+  height: 12px;
   z-index: 30;
   opacity: 0;
   transition: opacity 0.15s;
@@ -893,11 +857,10 @@ body {
 .resize-handle-r {
   right: 0;
   cursor: nwse-resize;
-  border-radius: 0 0 16px 0;
 }
 .resize-handle-r::after {
-  bottom: 6px;
-  right: 6px;
+  bottom: 2px;
+  right: 2px;
   border-right: 2px solid #666;
   border-bottom: 2px solid #666;
 }
@@ -905,11 +868,10 @@ body {
 .resize-handle-l {
   left: 0;
   cursor: nesw-resize;
-  border-radius: 0 0 0 16px;
 }
 .resize-handle-l::after {
-  bottom: 6px;
-  left: 6px;
+  bottom: 2px;
+  left: 2px;
   border-left: 2px solid #666;
   border-bottom: 2px solid #666;
 }
@@ -940,12 +902,12 @@ h1 {
    ═══════════════════════════════════════════════ */
 @media (max-width: 600px) {
   :root {
-    --btn-size: 34px;
+    --btn-size: 30px;
     --strip-height: 121px;
     --section-gap: 4px;
-    --dpad-btn: 14px;
-    --btn-h-sm: 14px;
-    --btn-h-lg: 20px;
+    --dpad-btn: 10px;
+    --btn-h-sm: 10px;
+    --btn-h-lg: 16px;
     --left-col-w: 40px;
     --right-col-w: 40px;
   }
@@ -973,17 +935,15 @@ h1 {
     height: 52px;
   }
   .btn-half {
-    height: 18px;
+    height: 14px;
   }
   .left-upper .jam-btn,
   .left-lower .jam-btn,
   .right-lower .jam-btn,
   .left-mid > .jam-btn {
-    height: 14px;
-    font-size: 6px;
+    height: 10px;
   }
   .bottom-row .jam-btn {
     padding: 2px 5px;
-    font-size: 7px;
   }
 }
