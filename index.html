@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jamulator — Maschine Jam Emulator</title>
+  <link rel="stylesheet" href="css/jamulator.css">
+</head>
+<body>
+  <h1>Jamulator</h1>
+
+  <div id="controller">
+    <div id="shift-overlay">SHIFT</div>
+
+    <!-- ═══ Left Column ═══ -->
+    <div class="left-col">
+      <button class="jam-btn" data-control-id="BtnArrange">Song</button>
+      <button class="jam-btn" data-control-id="BtnStep">Step</button>
+      <button class="jam-btn" data-control-id="BtnPadMode">Pad<br>Mode</button>
+      <button class="jam-btn" data-control-id="BtnClear">Clear</button>
+      <button class="jam-btn" data-control-id="BtnDuplicate">Dupli<br>cate</button>
+      <button class="jam-btn" data-control-id="BtnArpRepeat">Note<br>Rpt</button>
+      <div class="col-spacer"></div>
+      <button class="jam-btn" data-control-id="BtnMacro">Macro</button>
+      <button class="jam-btn" data-control-id="BtnLevel">Level</button>
+      <button class="jam-btn" data-control-id="BtnAux">Aux</button>
+      <button class="jam-btn" data-control-id="BtnControl">Ctrl</button>
+      <button class="jam-btn" data-control-id="BtnAuto">Auto</button>
+    </div>
+
+    <!-- ═══ Center Area ═══ -->
+    <div class="center-area">
+      <!-- Scene Row -->
+      <div class="scene-row">
+        <button class="jam-btn" data-control-id="BtnScene1">1</button>
+        <button class="jam-btn" data-control-id="BtnScene2">2</button>
+        <button class="jam-btn" data-control-id="BtnScene3">3</button>
+        <button class="jam-btn" data-control-id="BtnScene4">4</button>
+        <button class="jam-btn" data-control-id="BtnScene5">5</button>
+        <button class="jam-btn" data-control-id="BtnScene6">6</button>
+        <button class="jam-btn" data-control-id="BtnScene7">7</button>
+        <button class="jam-btn" data-control-id="BtnScene8">8</button>
+      </div>
+
+      <!-- 8×8 Matrix -->
+      <div class="matrix-grid">
+        <!-- Row A -->
+        <button class="jam-btn" data-control-id="BtnA1"></button>
+        <button class="jam-btn" data-control-id="BtnA2"></button>
+        <button class="jam-btn" data-control-id="BtnA3"></button>
+        <button class="jam-btn" data-control-id="BtnA4"></button>
+        <button class="jam-btn" data-control-id="BtnA5"></button>
+        <button class="jam-btn" data-control-id="BtnA6"></button>
+        <button class="jam-btn" data-control-id="BtnA7"></button>
+        <button class="jam-btn" data-control-id="BtnA8"></button>
+        <!-- Row B -->
+        <button class="jam-btn" data-control-id="BtnB1"></button>
+        <button class="jam-btn" data-control-id="BtnB2"></button>
+        <button class="jam-btn" data-control-id="BtnB3"></button>
+        <button class="jam-btn" data-control-id="BtnB4"></button>
+        <button class="jam-btn" data-control-id="BtnB5"></button>
+        <button class="jam-btn" data-control-id="BtnB6"></button>
+        <button class="jam-btn" data-control-id="BtnB7"></button>
+        <button class="jam-btn" data-control-id="BtnB8"></button>
+        <!-- Row C -->
+        <button class="jam-btn" data-control-id="BtnC1"></button>
+        <button class="jam-btn" data-control-id="BtnC2"></button>
+        <button class="jam-btn" data-control-id="BtnC3"></button>
+        <button class="jam-btn" data-control-id="BtnC4"></button>
+        <button class="jam-btn" data-control-id="BtnC5"></button>
+        <button class="jam-btn" data-control-id="BtnC6"></button>
+        <button class="jam-btn" data-control-id="BtnC7"></button>
+        <button class="jam-btn" data-control-id="BtnC8"></button>
+        <!-- Row D -->
+        <button class="jam-btn" data-control-id="BtnD1"></button>
+        <button class="jam-btn" data-control-id="BtnD2"></button>
+        <button class="jam-btn" data-control-id="BtnD3"></button>
+        <button class="jam-btn" data-control-id="BtnD4"></button>
+        <button class="jam-btn" data-control-id="BtnD5"></button>
+        <button class="jam-btn" data-control-id="BtnD6"></button>
+        <button class="jam-btn" data-control-id="BtnD7"></button>
+        <button class="jam-btn" data-control-id="BtnD8"></button>
+        <!-- Row E -->
+        <button class="jam-btn" data-control-id="BtnE1"></button>
+        <button class="jam-btn" data-control-id="BtnE2"></button>
+        <button class="jam-btn" data-control-id="BtnE3"></button>
+        <button class="jam-btn" data-control-id="BtnE4"></button>
+        <button class="jam-btn" data-control-id="BtnE5"></button>
+        <button class="jam-btn" data-control-id="BtnE6"></button>
+        <button class="jam-btn" data-control-id="BtnE7"></button>
+        <button class="jam-btn" data-control-id="BtnE8"></button>
+        <!-- Row F -->
+        <button class="jam-btn" data-control-id="BtnF1"></button>
+        <button class="jam-btn" data-control-id="BtnF2"></button>
+        <button class="jam-btn" data-control-id="BtnF3"></button>
+        <button class="jam-btn" data-control-id="BtnF4"></button>
+        <button class="jam-btn" data-control-id="BtnF5"></button>
+        <button class="jam-btn" data-control-id="BtnF6"></button>
+        <button class="jam-btn" data-control-id="BtnF7"></button>
+        <button class="jam-btn" data-control-id="BtnF8"></button>
+        <!-- Row G -->
+        <button class="jam-btn" data-control-id="BtnG1"></button>
+        <button class="jam-btn" data-control-id="BtnG2"></button>
+        <button class="jam-btn" data-control-id="BtnG3"></button>
+        <button class="jam-btn" data-control-id="BtnG4"></button>
+        <button class="jam-btn" data-control-id="BtnG5"></button>
+        <button class="jam-btn" data-control-id="BtnG6"></button>
+        <button class="jam-btn" data-control-id="BtnG7"></button>
+        <button class="jam-btn" data-control-id="BtnG8"></button>
+        <!-- Row H -->
+        <button class="jam-btn" data-control-id="BtnH1"></button>
+        <button class="jam-btn" data-control-id="BtnH2"></button>
+        <button class="jam-btn" data-control-id="BtnH3"></button>
+        <button class="jam-btn" data-control-id="BtnH4"></button>
+        <button class="jam-btn" data-control-id="BtnH5"></button>
+        <button class="jam-btn" data-control-id="BtnH6"></button>
+        <button class="jam-btn" data-control-id="BtnH7"></button>
+        <button class="jam-btn" data-control-id="BtnH8"></button>
+      </div>
+
+      <!-- Group Row -->
+      <div class="group-row">
+        <button class="jam-btn" data-control-id="BtnGroupA">A</button>
+        <button class="jam-btn" data-control-id="BtnGroupB">B</button>
+        <button class="jam-btn" data-control-id="BtnGroupC">C</button>
+        <button class="jam-btn" data-control-id="BtnGroupD">D</button>
+        <button class="jam-btn" data-control-id="BtnGroupE">E</button>
+        <button class="jam-btn" data-control-id="BtnGroupF">F</button>
+        <button class="jam-btn" data-control-id="BtnGroupG">G</button>
+        <button class="jam-btn" data-control-id="BtnGroupH">H</button>
+      </div>
+
+      <!-- Touch Strips -->
+      <div class="strips-row">
+        <div class="touch-strip" data-control-id="TstA"></div>
+        <div class="touch-strip" data-control-id="TstB"></div>
+        <div class="touch-strip" data-control-id="TstC"></div>
+        <div class="touch-strip" data-control-id="TstD"></div>
+        <div class="touch-strip" data-control-id="TstE"></div>
+        <div class="touch-strip" data-control-id="TstF"></div>
+        <div class="touch-strip" data-control-id="TstG"></div>
+        <div class="touch-strip" data-control-id="TstH"></div>
+      </div>
+    </div>
+
+    <!-- ═══ Right Column ═══ -->
+    <div class="right-col">
+      <button class="jam-btn" data-control-id="BtnMst">Mst</button>
+      <button class="jam-btn" data-control-id="BtnGrp">Grp</button>
+      <button class="jam-btn" data-control-id="BtnIn1">In1</button>
+      <button class="jam-btn" data-control-id="BtnCue">Cue</button>
+      <div class="col-spacer"></div>
+      <button class="jam-btn" data-control-id="BtnBrowse">Brwse</button>
+      <button class="jam-btn" data-control-id="BtnPerform">Perf</button>
+      <button class="jam-btn" data-control-id="BtnVariation">Notes</button>
+      <button class="jam-btn" data-control-id="BtnLock">Lock</button>
+      <button class="jam-btn" data-control-id="BtnTune">Tune</button>
+      <button class="jam-btn" data-control-id="BtnSwing">Swing</button>
+      <button class="jam-btn" data-control-id="BtnSelect">Sel</button>
+      <div class="col-spacer"></div>
+
+      <!-- D-Pad -->
+      <div class="dpad">
+        <button class="jam-btn" data-control-id="BtnDpad1">▲</button>
+        <button class="jam-btn" data-control-id="BtnDpad4">◀</button>
+        <button class="jam-btn" data-control-id="BtnDpad2">▶</button>
+        <button class="jam-btn" data-control-id="BtnDpad3">▼</button>
+      </div>
+
+      <!-- Encoder -->
+      <div class="encoder-wrap">
+        <div class="encoder" data-control-id="EncPush"></div>
+      </div>
+
+      <!-- Level Meters -->
+      <div class="level-meters">
+        <div class="level-bar" id="level-l"></div>
+        <div class="level-bar" id="level-r"></div>
+      </div>
+    </div>
+
+    <!-- ═══ Bottom Row ═══ -->
+    <div class="bottom-row">
+      <button class="jam-btn" data-control-id="BtnPlay">Play</button>
+      <button class="jam-btn" data-control-id="BtnRecord">Rec</button>
+      <button class="jam-btn" data-control-id="BtnArrowLeft">&lt;</button>
+      <button class="jam-btn" data-control-id="BtnArrowRight">&gt;</button>
+      <button class="jam-btn" data-control-id="BtnTempo">Tempo</button>
+      <button class="jam-btn" data-control-id="BtnGrid">Grid</button>
+      <button class="jam-btn" data-control-id="BtnSolo">Solo</button>
+      <button class="jam-btn" data-control-id="BtnMute">Mute</button>
+    </div>
+  </div>
+
+  <!-- ═══ Toolbar ═══ -->
+  <div id="toolbar">
+    <label for="midi-input">MIDI In</label>
+    <select id="midi-input">
+      <option value="">-- None --</option>
+    </select>
+
+    <label for="midi-output">MIDI Out</label>
+    <select id="midi-output">
+      <option value="">-- None --</option>
+    </select>
+
+    <button id="btn-connect">Connect</button>
+
+    <label class="file-label" for="file-ncmj">Load .ncmj</label>
+    <input type="file" id="file-ncmj" accept=".ncmj,.xml">
+  </div>
+
+  <div id="status"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

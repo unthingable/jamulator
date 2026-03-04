@@ -1,0 +1,562 @@
+/* Jamulator — Maschine Jam GUI Emulator */
+
+:root {
+  --bg-body: #1a1a1a;
+  --bg-controller: #2a2a2a;
+  --bg-surface: #222;
+  --bg-button: #3a3a3a;
+  --bg-button-hover: #4a4a4a;
+  --border-color: #444;
+  --text-color: #ccc;
+  --text-dim: #888;
+  --text-label: #aaa;
+  --accent: #00ccff;
+  --radius: 4px;
+  --btn-size: 44px;
+  --matrix-btn-size: 42px;
+  --strip-width: 36px;
+  --strip-height: 180px;
+  --gap: 6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-body);
+  color: var(--text-color);
+  font-family: 'Inter', 'SF Pro', -apple-system, system-ui, sans-serif;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Controller Shell ── */
+
+#controller {
+  background: var(--bg-controller);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow:
+    0 0 0 1px #3a3a3a,
+    0 8px 32px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto auto auto auto;
+  gap: 8px;
+  position: relative;
+  max-width: 740px;
+}
+
+/* ── Column Layouts ── */
+
+.left-col, .right-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: 4px 6px;
+}
+
+.left-col { grid-column: 1; grid-row: 1 / 5; }
+.right-col { grid-column: 3; grid-row: 1 / 5; }
+
+.center-area {
+  grid-column: 2;
+  grid-row: 1 / 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.bottom-row {
+  grid-column: 1 / 4;
+  grid-row: 5;
+  display: flex;
+  justify-content: center;
+  gap: var(--gap);
+  padding: 8px 0 4px;
+  border-top: 1px solid #333;
+}
+
+/* Spacer between button groups */
+.col-spacer {
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Generic Button ── */
+
+.jam-btn {
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background: var(--bg-button);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-label);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  transition: background 0.05s, border-color 0.05s;
+  text-align: center;
+  line-height: 1.1;
+  padding: 2px;
+}
+
+.jam-btn:hover {
+  background: var(--bg-button-hover);
+}
+
+.jam-btn:active,
+.jam-btn.pressed {
+  background: #555;
+  border-color: #fff;
+  transform: scale(0.95);
+}
+
+/* LED-lit state */
+.jam-btn.lit {
+  background: color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 100%), var(--bg-button));
+  border-color: var(--led-color, var(--border-color));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--led-color, transparent) calc(var(--led-brightness, 0) * 60%), transparent);
+  color: #fff;
+}
+
+.jam-btn.lit.pressed {
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--led-color, transparent) 80%, transparent),
+    0 0 4px #fff;
+  border-color: #fff;
+}
+
+/* ── Scene + Group Rows ── */
+
+.scene-row, .group-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.scene-row .jam-btn,
+.group-row .jam-btn {
+  width: 100%;
+  height: 32px;
+  font-size: 10px;
+}
+
+/* ── 8×8 Matrix ── */
+
+.matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+
+.matrix-grid .jam-btn {
+  width: 100%;
+  height: var(--matrix-btn-size);
+  aspect-ratio: 1;
+  font-size: 0;
+  border-radius: 3px;
+}
+
+/* ── D-Pad ── */
+
+.dpad {
+  display: grid;
+  grid-template-areas:
+    ".  up   ."
+    "lt .    rt"
+    ".  dn   .";
+  grid-template-columns: repeat(3, var(--btn-size));
+  grid-template-rows: repeat(3, 30px);
+  gap: 2px;
+  justify-items: center;
+  align-items: center;
+}
+
+.dpad .jam-btn {
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  padding: 0;
+}
+
+[data-control-id="BtnDpad1"] { grid-area: up; }
+[data-control-id="BtnDpad2"] { grid-area: rt; }
+[data-control-id="BtnDpad3"] { grid-area: dn; }
+[data-control-id="BtnDpad4"] { grid-area: lt; }
+
+/* ── Encoder ── */
+
+.encoder-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.encoder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #555, #333 60%, #2a2a2a);
+  border: 2px solid #555;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.encoder::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 8px;
+  background: #888;
+  border-radius: 2px;
+  transition: transform 0.1s;
+}
+
+.encoder.pressed {
+  background: radial-gradient(circle at 40% 35%, #666, #444 60%, #333);
+  border-color: #fff;
+  transform: scale(0.96);
+}
+
+.encoder.touched {
+  border-color: var(--accent);
+}
+
+.encoder.turn-cw::after {
+  animation: turn-cw 0.2s ease-out;
+}
+
+.encoder.turn-ccw::after {
+  animation: turn-ccw 0.2s ease-out;
+}
+
+@keyframes turn-cw {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  50% { transform: translateX(-50%) rotate(30deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+
+@keyframes turn-ccw {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  50% { transform: translateX(-50%) rotate(-30deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+
+/* ── Touch Strips ── */
+
+.strips-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.touch-strip {
+  width: 100%;
+  height: var(--strip-height);
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  --strip-value: 0%;
+  --strip-color: #666;
+  --strip-brightness: 0.5;
+  --finger-pos: 100%;
+}
+
+/* Strip bar fill — default SINGLE mode: fills from bottom */
+.touch-strip::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--strip-value);
+  background: var(--strip-color);
+  opacity: var(--strip-brightness);
+  transition: height 0.03s linear;
+}
+
+/* DOT mode: small indicator at position */
+.touch-strip.mode-dot::before {
+  height: 6px;
+  bottom: var(--strip-value);
+  border-radius: 2px;
+}
+
+/* PAN mode: fill from center */
+.touch-strip.mode-pan::before {
+  --pan-center: 50%;
+  height: auto;
+  /* When value > 50%: top=50%, bottom=auto, height=(value-50)*2 from center up */
+  /* When value < 50%: top=auto, bottom=50%, height=(50-value)*2 from center down */
+  /* Approximate with clip-path based on strip-value */
+}
+
+/* DUAL mode: same as single but values come from SysEx */
+.touch-strip.mode-dual::before {
+  /* Same visual as single */
+}
+
+/* Touch indicator */
+.touch-strip.touched::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: var(--finger-pos);
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.6), transparent);
+  box-shadow: 0 0 12px var(--strip-color, #fff);
+  animation: finger-pulse 0.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes finger-pulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* ── Level Meters ── */
+
+.level-meters {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 40px;
+  padding: 0 4px;
+}
+
+.level-bar {
+  width: 6px;
+  height: 100%;
+  background: #1a1a1a;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  --level: 0%;
+}
+
+.level-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--level);
+  background: linear-gradient(to top, #00ff00, #ffee00, #ff0020);
+  transition: height 0.05s;
+}
+
+/* ── Ripple Effect ── */
+
+.ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(1);
+  border-radius: inherit;
+  border: 2px solid var(--ripple-color, #fff);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  animation: ripple-expand 0.35s ease-out forwards;
+}
+
+@keyframes ripple-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Encoder ripple is circular */
+.encoder .ripple {
+  border-radius: 50%;
+}
+
+/* ── Shift Overlay ── */
+
+#shift-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 20;
+}
+
+#shift-overlay.visible {
+  opacity: 1;
+}
+
+/* ── Toolbar ── */
+
+#toolbar {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  background: #252525;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  max-width: 740px;
+  width: 100%;
+}
+
+#toolbar label {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#toolbar select {
+  background: #333;
+  color: var(--text-color);
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 12px;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+#toolbar select:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+
+#toolbar button {
+  background: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.1s;
+}
+
+#toolbar button:hover {
+  background: #555;
+}
+
+#toolbar button:active {
+  background: var(--accent);
+  color: #000;
+}
+
+.file-label {
+  background: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.1s;
+}
+
+.file-label:hover {
+  background: #555;
+}
+
+#file-ncmj {
+  display: none;
+}
+
+/* ── Status Bar ── */
+
+#status {
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  text-align: center;
+  min-height: 1.5em;
+}
+
+/* ── Title ── */
+
+h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 600px) {
+  :root {
+    --btn-size: 36px;
+    --matrix-btn-size: 34px;
+    --strip-height: 140px;
+  }
+
+  #controller {
+    padding: 12px;
+  }
+
+  #toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
