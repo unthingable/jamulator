@@ -113,7 +113,20 @@ function doRelease(controlId) {
   }
 }
 
+function releaseAllLocked() {
+  for (const controlId of lockedButtons) {
+    const el = document.querySelector(`[data-control-id="${controlId}"]`);
+    if (el) el.classList.remove('locked');
+    doRelease(controlId);
+  }
+  lockedButtons.clear();
+}
+
 function bindButtons() {
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt' || e.key === 'Meta') releaseAllLocked();
+  });
+
   document.querySelectorAll('[data-control-id]').forEach(el => {
     const controlId = el.dataset.controlId;
 
