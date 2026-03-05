@@ -68,9 +68,10 @@ export function initEncoder() {
     }
 
     // Convert accumulated pixels to turn steps
+    // Drag up (negative deltaY) = increment, drag down = decrement
     while (Math.abs(pixelAccum) >= DRAG_PX_PER_STEP) {
-      const direction = pixelAccum > 0 ? 1 : -1;
-      pixelAccum -= direction * DRAG_PX_PER_STEP;
+      const direction = pixelAccum > 0 ? -1 : 1;
+      pixelAccum += direction * DRAG_PX_PER_STEP;
       sendCC(0, ENCODER_CC_TURN, direction > 0 ? 1 : 127);
       state.setEncoderTurn(direction);
     }
