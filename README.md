@@ -1,140 +1,126 @@
-# Jamulator — Maschine Jam Web Emulator
+# JAMulator: virtual Maschine Jam
 
-A web-based GUI emulator of the Native Instruments Maschine Jam controller with full bidirectional MIDI support.
+A complete emulation of the Native Instruments Maschine Jam controller **in MIDI mode**. Built as a single-page vanilla JS app: no framework, no build tools, no dependencies.
+
+![Jamulator main view](assets/main.png)
+
+* Displays all controller actions
+* Responds with lights to all feedback
+* Supports custom mappings
+* Looks nice
+* Controllable by keyboard
 
 **Use cases:**
-1. Test controller scripts (like monsterjam) without physical hardware
-2. Virtual MIDI controller for DAW use
-3. On-screen mirror for demo videos — reflects all button presses and touches in real-time
+1. Virtual MIDI controller for DAW use; test controller scripts without physical hardware
+2. On-screen mirror (in 3-way mode): reflects all button presses, LED colors, and touch interactions in real-time
+
+> [!NOTE]
+> We say DAW but mean mostly Bitwig with a Jam extension (like [MonsterJam](https://github.com/unthingable/monster-jam)).
 
 ## Quick Start
 
-### 1. Run a Local HTTP Server
-
 ```bash
-cd /Users/user/work/music/jamulator
-python3 -m http.server 8000
+run.sh
 ```
 
-Or use VS Code Live Server extension.
+Or manually:
 
-### 2. Open in Browser
+1. Run a Local HTTP Server: `python3 -m http.server 8000` or use VS Code Live Server extension
+1. Open in browser: `http://localhost:8000`
 
-Navigate to `http://localhost:8000`
+### Create MIDI Ports
 
-You should see the Jamulator UI — a dark-themed replica of the Maschine Jam controller with all buttons, pads, strips, and encoder.
+Jamulator cannot create ports on its own. You'll need two virtual ports so that Jamulator can talk to DAW.
 
-### 3. Connect MIDI Ports
+* **macOS**: Use the Audio MIDI Setup app (built-in) to create an IAC (Inter-Application Communication) bus, which then appears as a MIDI port that Web MIDI can connect to.
+* **Windows**: Third-party tools like loopMIDI or virtualMIDI.
+* **Linux**: `modprobe snd-virmidi` or ALSA's `aconnect`.
 
-1. **MIDI In**: Select the input port you want to monitor (e.g., a loopback port for testing, or the Jam hardware's output for mirror mode)
-2. **MIDI Out**: Select the output port to send MIDI to (e.g., a DAW, loopback, or back to the hardware)
-3. Click **Connect**
+### Connect MIDI Ports
 
-You should see "Connected — In: [port], Out: [port]" at the bottom.
+Select your ports and click **Connect** (or type `.`). Connections auto-reconnect when ports reappear. All ports are optional.
 
-### 4. Test It
+## UI
 
-- **Click buttons** on the GUI → you should see MIDI CC/Note messages in any connected MIDI monitor
-- **Send LED colors** from your DAW or MIDI monitor → buttons should light up
-- **Drag touch strips** → CC values 0-127 are sent
-- **Scroll the encoder knob** (use mouse wheel) → relative CC values sent
-- **Connect real Jam hardware** for mirror mode → press buttons on real hardware, see them highlight on screen
+Main panel is exactly the Jam surface, all controls are interactive.
 
-## Features
+- **Click buttons** → MIDI messages are sent to the output port
+- **Drag touch strips** up/down
+- **Scroll the encoder** (mouse wheel) or **click-drag** to turn
+- **Click the encoder** to toggle touch; **Shift+click** to toggle press
 
-### Button Types
-- **Left column** (11 buttons): Song, Step, Pad Mode, Clear, Duplicate, Note Repeat, Macro, Level, Aux, Control, Auto
-- **Right column** (11 buttons): Master, Group, In1, Cue, Browse, Perform, Notes, Lock, Tune, Swing, Select
-- **Scene buttons** (8): Selectable scene rows
-- **Group buttons** (8): Group A-H
-- **Matrix** (8×8): 64 RGB pads for note triggering
-- **D-Pad** (4): Navigation up/down/left/right
-- **Bottom row** (8): Play, Record, <, >, Tempo, Grid, Solo, Mute
-- **Encoder**: Click-enabled rotary knob with touch detection
+Click events are visibly indicated by a ripple, a held button will also emit an orange glow.
+Encoder glows orange on push, teal on just touch.
 
-### Touch Strips
-8 touch-sensitive vertical strips. Drag up/down to send CC values (0-127). When touched, shows a glowing finger indicator.
+Many buttons respond to keystrokes. Key chords are possible by using keystrokes or holding OPT/ALT and clicking multiple buttons.
 
-**Strip modes** (received via SysEx):
-- **SINGLE**: Fill from bottom (default)
-- **DOT**: Single indicator dot at position
-- **PAN**: Center-fill (stereo balance)
-- **DUAL**: Dual fill (for level meters)
+### Footswitch
 
-### MIDI Mapping
+Under **FSW** tab in top right corner there are **TIP** and **RNG** indicators, for footswitch tip and ring. They are clickable.
 
-All MIDI mappings are derived from the Bitwig Studio monsterjam extension (`ext.ncmj`).
+Toggle indicator visibility by clicking FSW tab.
 
-**Examples:**
-- `BtnPlay` → CC 108 on channel 0
-- `BtnScene1` → Note 0 on channel 1
-- `BtnA1` (matrix pad) → Note 22 on channel 0
-- `TstA` (strip A) → CC 8 on channel 0
+### Control Panel
 
-Full mapping table is in `js/default-mapping.js`.
+Visible below the Jam. Toggle visibility by pressing **CONF** tab or `,` key.
 
-### Load Custom Mappings
+| Control | Description |
+|---------|-------------|
+| **From Jam** port | Receives control events from a real Jam (button presses, strips, encoder) |
+| **From DAW** port | Receives LED feedback from your DAW/controller script (addressed to Jam) |
+| **To DAW** port | Sends control events (buttons, etc.) to DAW |
+| MIDI plug icon | Toggles MIDI on/off (the CONF tab color reflects this state) |
+| Keyboard icon | Choose a keyboard preset |
+| Mapping button | Load another Native Instruments .ncmj controller mapping |
+| **FIT** button | Toggles between resizable controller (drag lower corners) and resizable window (controller occupies full width) |
 
-Click **Load .ncmj** to upload a Native Instruments `.ncmj` XML file. The emulator will parse it and apply the custom mapping. Falls back to defaults if parsing fails.
+## Standalone use (no hardware)
+No real Jam nearby? Don't have one but always wanted to try? No problem! Just leave "From Jam" port empty and use the app.
 
-## Architecture
+## Keyboard Shortcuts
 
-### Single-Page App (No Framework, No Build Tools)
+Jamulator responds to keyboard, multiple keyboard mappings are supported. "Mnemonic" preset is included, can add more in `keyboard.js` and switch via keyboard mapping in toolbar.
 
-**Entry point**: `index.html`
+### Mnemonic Preset
+Most buttons are mapped to mnemonic keys — hold a key to press, release to let go:
 
-**JavaScript modules** (ES6 modules):
-- `main.js` — Initialization, port selection, file upload
-- `state.js` — Centralized state store
-- `midi-engine.js` — Web MIDI API integration
-- `led-renderer.js` — State changes → DOM updates
-- `ui-controller.js` — Button clicks → MIDI output
-- `touchstrip.js` — Strip drag → MIDI output
-- `encoder.js` — Scroll wheel + click interaction
-- `sysex.js` — SysEx message parse/build
-- `xml-parser.js` — `.ncmj` file parsing
-- `colors.js` — 18-color palette lookup
-- `default-mapping.js` — Hardcoded MIDI mapping
+| Key | Button | | Key | Button |
+|-----|--------|-|-----|--------|
+| Space | Play | | `s` | Select |
+| `r` | Record | | `x` | Clear |
+| `d` | Duplicate | | `c` | Control |
+| `l` | Level | | `m` | Macro |
+| `b` | Browse | | `a` | Auto |
+| `t` | Tempo | | `g` | Grid |
+| `k` | Lock | | `n` | Note Repeat |
+| `w` | Swing | | `p` | Encoder push |
+| `[` | ◀ Arrow | | `]` | ▶ Arrow |
+| Shift | Shift | | `.` | Toggle MIDI connection |
+| `,` | Settings | | | |
 
-**CSS**: Responsive hardware-themed styling with CSS Grid layout.
+**Alt+key** or **Alt+click** latches a button on — press again to release. Useful for key chords (Shift, Lock, Solo, etc).
 
-## Bidirectional MIDI
+## Three-way mirror
 
-### Outbound (GUI → MIDI)
-User action (button click, strip drag, etc.) → update state → send MIDI message
+An advanced use case where Jamulator sits between DAW and Jam as a virtual copy.
+Jam and Jamulator mirror each other and are usable simultaneously.
 
-### Inbound (MIDI → GUI)
-Incoming MIDI → reverse-lookup control ID → update state → renderer updates DOM
+This requires tapping into DAW<>Jam MIDI streams as follows:
 
-### Mirror Mode
-Connect input port to hardware Jam's output. Button presses from the real hardware trigger press highlights on the emulator screen. LED color commands from a DAW show the current button color. Shift button state arrives via SysEx.
+* DAW sends to both Jam and Jamulator
+* their output is merged into DAW
+  
 
-## SysEx Protocol
+<img src="assets/3way.png" width="400" alt="Three-way mode diagram">
 
-**Header**: `F0 00 21 09 15 00 4D 50 00 01`
 
-Supported commands:
-- `05`: Strip LED colors + bar modes (extension → hardware)
-- `04`: Strip bar positions in DUAL mode (extension → hardware)
-- `4D`: Shift button state (hardware → extension)
+You will want a way to set up this routing, e.g. with a routing tool (MIDI Patchbay on Mac, MIDI-OX on Windows). Alternatively, [MonsterJam](https://github.com/unthingable/monster-jam) supports dual-ported mode and can use the two additional (virtual) ports directly.
 
 ## Requirements
 
-- Modern browser with **Web MIDI API** support (Chrome, Edge, Opera; Firefox requires enabling about:config flag)
+- Modern browser with **Web MIDI API** support (Chrome, Edge, Opera; Firefox requires flag)
 - **HTTPS or localhost** (Web MIDI requires secure context)
 - System MIDI ports (virtual or physical)
-- Optional: MIDI loopback utility (for testing without real hardware)
-
-## Browser Support
-
-| Browser | Support | HTTPS Required |
-|---------|---------|----------------|
-| Chrome/Chromium | ✓ Full | Yes* |
-| Edge | ✓ Full | Yes* |
-| Firefox | ✓ (experimental) | Yes* |
-| Safari | ✗ Not supported | — |
-
-*Localhost (127.0.0.1) is considered secure and doesn't require HTTPS.
 
 ## Troubleshooting
 
@@ -144,48 +130,20 @@ Supported commands:
 - Ensure SysEx is allowed if using `.ncmj` files
 
 ### No MIDI ports appear
-- Check your system's MIDI setup
-- On Mac: MIDI Audio Setup, IAC Driver
+- On Mac: Audio MIDI Setup → enable IAC Driver
 - On Windows: Virtual MIDI tools (loopMIDI)
 - On Linux: ALSA or JACK
 
 ### LED colors not showing
-- Verify the MIDI input is connected
-- Check that color messages are being sent on the correct channel (0 for most messages)
+- Verify the "From DAW" input is connected
+- Check that color messages are being sent on the correct channel
 - Open browser DevTools console for any JS errors
-
-### Buttons not responding
-- Check MIDI output is connected
-- Verify the DAW or MIDI monitor is receiving the messages
-- Try a loopback connection to test locally
-
-## Development Notes
-
-### Adding New Features
-
-1. **New button**: Add to `default-mapping.js`, HTML, and CSS
-2. **New MIDI message type**: Update `midi-engine.js` and `state.js`
-3. **Custom XML format**: Extend `xml-parser.js` parsing logic
-
-### Testing
-
-Use a MIDI monitor like:
-- **Mac**: MIDI Monitor (free app)
-- **Windows**: MIDIOX, Bome MIDI Translator Free
-- **Web**: Online MIDI monitor (if using loopback)
-
-Send test messages and watch buttons light up in real-time.
 
 ## References
 
-- [Web MIDI API spec](https://www.w3.org/TR/webmidi/)
-- [Monsterjam extension](https://github.com/chrishubert/monsterjam) — Source of MIDI mappings
-- [Native Instruments documentation](https://www.native-instruments.com/en/products/maschine/maschine-jam/)
+- [MonsterJam extension](https://github.com/unthingable/monster-jam) — Source of MIDI mappings
+- [Native Instruments Maschine Jam](https://www.native-instruments.com/en/products/maschine/maschine-jam/)
 
 ## License
 
 This emulator is provided as-is for development and testing. Native Instruments Maschine Jam is a trademark of Native Instruments.
-
----
-
-**Questions?** Check the browser console (F12) for debug output and error messages.
